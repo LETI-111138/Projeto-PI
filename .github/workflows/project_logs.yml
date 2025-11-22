@@ -1,4 +1,4 @@
-name: Logs dos pushs do projeto
+name: Verificação de compilação e run de testes do código
 
 on:
   push:
