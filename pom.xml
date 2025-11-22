@@ -16,6 +16,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
+        <libgdx.version>1.12.1</libgdx.version>
     </properties>
 
     <!-- Gestão das versões JUnit 6 -->
@@ -58,6 +59,25 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.25.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx</artifactId>
+            <version>${libgdx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-lwjgl3</artifactId>
+            <version>${libgdx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-platform</artifactId>
+            <version>${libgdx.version}</version>
+            <classifier>natives-desktop</classifier>
         </dependency>
 
     </dependencies>
