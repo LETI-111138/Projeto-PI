@@ -9,7 +9,7 @@ public class Main {
 
         // Configurações da Janela
         config.setTitle("Projeto PI - Game Engine");
-        config.setWindowedMode(1280, 720);
+        config.setWindowedMode(1920, 1080);
         config.setForegroundFPS(60);
 
         // Iniciar o jogo
