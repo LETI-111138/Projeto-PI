@@ -60,12 +60,6 @@
             <version>2.25.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>io.wf.frk</groupId>
-            <artifactId>rootProject.name</artifactId>
-            <version>0.1.2</version>     
-        </dependency>
-
     </dependencies>
 
     <build>
