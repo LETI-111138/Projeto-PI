@@ -13,7 +13,8 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class gameinit extends ApplicationAdapter {
-        Texture imagem;
+        Texture map;
+        Texture mapvoid;
         SpriteBatch batch;
         BitmapFont font;
         OrthographicCamera camera;
@@ -48,13 +49,14 @@ public class gameinit extends ApplicationAdapter {
             }
             animation = new Animation<TextureRegion>(0.1f, animationFrames);
             stateTime = 0f;
-            x = 500;
-            y = 500;
+            x = 1000;
+            y = 1000;
             try {
-                imagem = new Texture("assets/mapa1.png");
+                map = new Texture("assets/mapa1.png");
             } catch (Exception e) {
-                System.err.println("Erro: Não foi possível encontrar a imagem. Verifica a pasta assets!");
+                System.err.println("Erro: Não foi possível encontrar a map. Verifica a pasta assets!");
             }
+            mapvoid = new Texture("assets/map_void.png");
             font = new BitmapFont(); // Fonte padrão do sistema
             font.getData().setScale(2);
         }
@@ -70,17 +72,22 @@ public class gameinit extends ApplicationAdapter {
             stateTime += delta;
 
 
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 x -= velocidade * delta;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 x += velocidade * delta;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 y += velocidade * delta;
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
                 y -= velocidade * delta;
+            }
+
+            if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
+                Gdx.app.exit();
+                System.exit(0);
             }
 
             //Limites do "mundo" para o mc
@@ -91,10 +98,10 @@ public class gameinit extends ApplicationAdapter {
             y = MathUtils.clamp(y, 0, ALTURA_MUNDO - cFrame.getRegionHeight());
 
             if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-                camera.zoom -= 1.0f * delta; // Aproximar
+                camera.zoom -= 1.0f * delta; // Aproximar camera do personagem
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-                camera.zoom += 1.0f * delta; // Afastar
+            if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
+                camera.zoom += 1.0f * delta; // Afastar camara do personagem
             }
             camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
             camera.position.set(x + cFrame.getRegionWidth()/2f, y  + cFrame.getRegionHeight()/2f, 0);
@@ -102,7 +109,8 @@ public class gameinit extends ApplicationAdapter {
             batch.setProjectionMatrix(camera.combined);
             // 2. Desenhar elementos
             batch.begin();
-            if (imagem != null) batch.draw(imagem, 0, 0);
+            if (mapvoid != null) batch.draw(mapvoid, -1000, -1000);
+            if (map != null) batch.draw(map, 0, 0);
             if (cFrame != null) batch.draw(cFrame, (int)x, (int)y);
             batch.end();
         }
@@ -111,7 +119,8 @@ public class gameinit extends ApplicationAdapter {
         @Override
         public void dispose() {
             batch.dispose();
-            if (imagem != null || mc != null) batch.dispose();
+            if (mc != null) mc.dispose();
+            if(map != null) map.dispose();
         }
     }
 

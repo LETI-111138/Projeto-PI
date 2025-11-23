@@ -1,7 +1,12 @@
 package startgame;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+
+import java.awt.*;
 
 public class Main {
     public static void main (String[] arg) {
@@ -11,8 +16,11 @@ public class Main {
         config.setTitle("Projeto PI - Game Engine");
         config.setWindowedMode(1920, 1080);
         config.setForegroundFPS(60);
+        config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
+
 
         // Iniciar o jogo
         new Lwjgl3Application(new gameinit(), config);
+
     }
 }
