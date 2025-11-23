@@ -21,6 +21,11 @@ public class gameinit extends ApplicationAdapter {
         Animation<TextureRegion> animation;
         Texture mc;
         float stateTime;
+
+        Texture clownsheet;
+        float stateTimeclown = 0f;
+        Animation<TextureRegion> clownsheetanimation;
+
         private static final int FRAME_COLS = 6;
         private static final int FRAME_ROWS = 1;
 
@@ -37,8 +42,21 @@ public class gameinit extends ApplicationAdapter {
             camera = new OrthographicCamera();
             camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             camera.zoom = 0.37f;
+            clownsheet = new Texture(Gdx.files.internal("assets/clownboss-Sheet.png"));
+            clownsheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            TextureRegion[][] tmpclown = TextureRegion.split(clownsheet, clownsheet.getWidth() / 8, clownsheet.getHeight() / 1);
+            TextureRegion[] animationFramesclown = new TextureRegion[8 * 1];
+            int indexclown = 0;
+            for (int i = 0; i < 1; i++) {
+                for (int j = 0; j < 8; j++) {
+                    animationFramesclown[indexclown++] = tmpclown[i][j];
+                }
+            }
+            clownsheetanimation = new Animation<TextureRegion>(0.1f, animationFramesclown);
+
             mc = new Texture(Gdx.files.internal("assets/mc_pj_pi.png"));
             mc.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
             TextureRegion[][] tmp = TextureRegion.split(mc, mc.getWidth() / FRAME_COLS, mc.getHeight() / FRAME_ROWS);
             TextureRegion[] animationFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
             int index = 0;
@@ -91,9 +109,14 @@ public class gameinit extends ApplicationAdapter {
             }
 
             //Limites do "mundo" para o mc
+            TextureRegion clownFrame = clownsheetanimation.getKeyFrame(stateTime, true);
+
+            x = MathUtils.clamp(x, 0, LARGURA_MUNDO - clownFrame.getRegionWidth());
+            y = MathUtils.clamp(y, 0, ALTURA_MUNDO - clownFrame.getRegionHeight());
 
 
             TextureRegion cFrame = animation.getKeyFrame(stateTime, true);
+
             x = MathUtils.clamp(x, 0, LARGURA_MUNDO - cFrame.getRegionWidth());
             y = MathUtils.clamp(y, 0, ALTURA_MUNDO - cFrame.getRegionHeight());
 
@@ -112,6 +135,7 @@ public class gameinit extends ApplicationAdapter {
             if (mapvoid != null) batch.draw(mapvoid, -1000, -1000);
             if (map != null) batch.draw(map, 0, 0);
             if (cFrame != null) batch.draw(cFrame, (int)x, (int)y);
+            if (clownFrame != null) batch.draw(clownFrame, 700, 700);
             batch.end();
         }
 
