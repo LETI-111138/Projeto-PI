@@ -23,6 +23,8 @@ public class gameinit extends ApplicationAdapter {
         private static final int FRAME_COLS = 6;
         private static final int FRAME_ROWS = 1;
 
+        final int LARGURA_MUNDO = 2000;
+        final int ALTURA_MUNDO = 2000;
         float x;
         float y;
         float velocidade = 80;
@@ -46,10 +48,10 @@ public class gameinit extends ApplicationAdapter {
             }
             animation = new Animation<TextureRegion>(0.1f, animationFrames);
             stateTime = 0f;
-            x = 100;
-            y = 100;
+            x = 500;
+            y = 500;
             try {
-                imagem = new Texture("assets/wdsxp.jpg");
+                imagem = new Texture("assets/mapa1.png");
             } catch (Exception e) {
                 System.err.println("Erro: Não foi possível encontrar a imagem. Verifica a pasta assets!");
             }
@@ -81,7 +83,12 @@ public class gameinit extends ApplicationAdapter {
                 y -= velocidade * delta;
             }
 
+            //Limites do "mundo" para o mc
+
+
             TextureRegion cFrame = animation.getKeyFrame(stateTime, true);
+            x = MathUtils.clamp(x, 0, LARGURA_MUNDO - cFrame.getRegionWidth());
+            y = MathUtils.clamp(y, 0, ALTURA_MUNDO - cFrame.getRegionHeight());
 
             if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
                 camera.zoom -= 1.0f * delta; // Aproximar
@@ -95,8 +102,7 @@ public class gameinit extends ApplicationAdapter {
             batch.setProjectionMatrix(camera.combined);
             // 2. Desenhar elementos
             batch.begin();
-            if (imagem != null) batch.draw(imagem, 100, 100);
-            if (imagem != null) batch.draw(imagem, 2000, 100);
+            if (imagem != null) batch.draw(imagem, 0, 0);
             if (cFrame != null) batch.draw(cFrame, (int)x, (int)y);
             batch.end();
         }
