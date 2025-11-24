@@ -5,8 +5,10 @@ import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.files.FileHandle;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Main {
     public static void main (String[] arg) {
@@ -23,4 +25,6 @@ public class Main {
         new Lwjgl3Application(new gameinit(), config);
 
     }
+
+
 }

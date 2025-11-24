@@ -1,150 +1,143 @@
 package startgame;
 
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class gameinit extends ApplicationAdapter {
-        Texture map;
-        Texture mapvoid;
-        SpriteBatch batch;
-        BitmapFont font;
-        OrthographicCamera camera;
-        Animation<TextureRegion> animation;
-        Texture mc;
-        float stateTime;
 
-        Texture clownsheet;
-        float stateTimeclown = 0f;
-        Animation<TextureRegion> clownsheetanimation;
+    SpriteBatch batch;
+    OrthographicCamera camera;
 
-        private static final int FRAME_COLS = 6;
-        private static final int FRAME_ROWS = 1;
+    // --- GESTORES DE IMAGENS ---
+    StaticImage gestorEstatico;
+    AnimatedImage gestorAnimado;
 
-        final int LARGURA_MUNDO = 2000;
-        final int ALTURA_MUNDO = 2000;
-        float x;
-        float y;
-        float velocidade = 80;
+    // Variáveis para o Jogador (MC)
+    HashMap<String,Animation<TextureRegion>> animPlayer;
+    float stateTime = 0f;
+    float x = 100, y = 100;
+    float velocidade = 80;
 
-        // Onde inicializamos variáveis (V.A.s, imagens, sons)
-        @Override
-        public void create() {
-            batch = new SpriteBatch();
-            camera = new OrthographicCamera();
-            camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            camera.zoom = 0.37f;
-            clownsheet = new Texture(Gdx.files.internal("assets/clownboss-Sheet.png"));
-            clownsheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-            TextureRegion[][] tmpclown = TextureRegion.split(clownsheet, clownsheet.getWidth() / 8, clownsheet.getHeight() / 1);
-            TextureRegion[] animationFramesclown = new TextureRegion[8 * 1];
-            int indexclown = 0;
-            for (int i = 0; i < 1; i++) {
-                for (int j = 0; j < 8; j++) {
-                    animationFramesclown[indexclown++] = tmpclown[i][j];
-                }
-            }
-            clownsheetanimation = new Animation<TextureRegion>(0.1f, animationFramesclown);
+    // Variáveis para o Boss (Clown) - Apenas exemplo de como carregar o segundo
+    Animation<TextureRegion> animBoss;
 
-            mc = new Texture(Gdx.files.internal("assets/mc_pj_pi.png"));
-            mc.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+    final int LARGURA_MUNDO = 2000;
+    final int ALTURA_MUNDO = 2000;
 
-            TextureRegion[][] tmp = TextureRegion.split(mc, mc.getWidth() / FRAME_COLS, mc.getHeight() / FRAME_ROWS);
-            TextureRegion[] animationFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
-            int index = 0;
-            for (int i = 0; i < FRAME_ROWS; i++) {
-                for (int j = 0; j < FRAME_COLS; j++) {
-                    animationFrames[index++] = tmp[i][j];
-                }
-            }
-            animation = new Animation<TextureRegion>(0.1f, animationFrames);
-            stateTime = 0f;
-            x = 1000;
-            y = 1000;
-            try {
-                map = new Texture("assets/mapa1.png");
-            } catch (Exception e) {
-                System.err.println("Erro: Não foi possível encontrar a map. Verifica a pasta assets!");
-            }
-            mapvoid = new Texture("assets/map_void.png");
-            font = new BitmapFont(); // Fonte padrão do sistema
-            font.getData().setScale(2);
-        }
-
-        // O Game Loop (chamado 60x por segundo)
-        @Override
-        public void render() {
-            // 1. Limpar o ecrã (Fundo Azul Escuro)
-            Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-            float delta = Gdx.graphics.getDeltaTime();
-            stateTime += delta;
+    @Override
+    public void create() {
+        batch = new SpriteBatch();
+        animPlayer = new HashMap<>();
+        // 1. INICIALIZAR GESTORES
+        gestorEstatico = new StaticImage(); // Carrega automaticamente 'mapa1' e 'map_void'
+        gestorAnimado = new AnimatedImage();
 
 
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-                x -= velocidade * delta;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-                x += velocidade * delta;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-                y += velocidade * delta;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-                y -= velocidade * delta;
-            }
+        gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
 
-            if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-                Gdx.app.exit();
-                System.exit(0);
-            }
+        // Guardar no mapa (agora já não dá erro)
+        animPlayer.put("player", gestorAnimado.getAnimacao("player"));
 
-            //Limites do "mundo" para o mc
-            TextureRegion clownFrame = clownsheetanimation.getKeyFrame(stateTime, true);
+        // Boss (Clown)
+        gestorAnimado.criarAnimacao("clownboss-Sheet.png", "boss", 8, 1, 0.1f);
 
-            x = MathUtils.clamp(x, 0, LARGURA_MUNDO - clownFrame.getRegionWidth());
-            y = MathUtils.clamp(y, 0, ALTURA_MUNDO - clownFrame.getRegionHeight());
+        // Atenção: Aqui tinha um erro de copy-paste, estava a ir buscar "player" em vez de "boss"
+        animPlayer.put("boss", gestorAnimado.getAnimacao("boss"));
 
-
-            TextureRegion cFrame = animation.getKeyFrame(stateTime, true);
-
-            x = MathUtils.clamp(x, 0, LARGURA_MUNDO - cFrame.getRegionWidth());
-            y = MathUtils.clamp(y, 0, ALTURA_MUNDO - cFrame.getRegionHeight());
-
-            if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-                camera.zoom -= 1.0f * delta; // Aproximar camera do personagem
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
-                camera.zoom += 1.0f * delta; // Afastar camara do personagem
-            }
-            camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
-            camera.position.set(x + cFrame.getRegionWidth()/2f, y  + cFrame.getRegionHeight()/2f, 0);
-            camera.update();
-            batch.setProjectionMatrix(camera.combined);
-            // 2. Desenhar elementos
-            batch.begin();
-            if (mapvoid != null) batch.draw(mapvoid, -1000, -1000);
-            if (map != null) batch.draw(map, 0, 0);
-            if (cFrame != null) batch.draw(cFrame, (int)x, (int)y);
-            if (clownFrame != null) batch.draw(clownFrame, 700, 700);
-            batch.end();
-        }
-
-        // Limpar memória ao fechar
-        @Override
-        public void dispose() {
-            batch.dispose();
-            if (mc != null) mc.dispose();
-            if(map != null) map.dispose();
-        }
+        // 3. CONFIGURAR CÂMARA
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); // Ou Gdx.graphics.getWidth()
+        camera.zoom = 0.5f;
     }
 
+    @Override
+    public void render() {
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        float delta = Gdx.graphics.getDeltaTime();
+        stateTime += delta;
+
+        // --- MOVIMENTO ---
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) x -= velocidade * delta;
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) x += velocidade * delta;
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) y += velocidade * delta;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) y -= velocidade * delta;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
+            Gdx.app.exit();
+            System.exit(0);
+        }
+
+        // --- OBTER FRAMES ATUAIS ---
+        TextureRegion frameClown = animPlayer.get("boss").getKeyFrame(stateTime, true);
+
+        // --- CÂMARA ---
+        //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameClown.getRegionWidth());
+        //y = MathUtils.clamp(y, 0, ALTURA_MUNDO - frameClown.getRegionHeight());
+
+
+        // --- OBTER FRAMES ATUAIS ---
+        TextureRegion framePlayer = animPlayer.get("player").getKeyFrame(stateTime, true);
+
+        // --- CÂMARA ---
+        x = MathUtils.clamp(x, 0, LARGURA_MUNDO - framePlayer.getRegionWidth());
+        y = MathUtils.clamp(y, 0, ALTURA_MUNDO - framePlayer.getRegionHeight());
+
+
+
+        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+            camera.zoom -= 1.0f * delta; // Aproximar camera do personagem
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
+            camera.zoom += 1.0f * delta; // Afastar camara do personagem
+        }
+
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
+        camera.position.set(x + framePlayer.getRegionWidth()/2f, y  + framePlayer.getRegionHeight()/2f, 0);
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+
+        batch.begin();
+
+        // 1. Desenhar Fundo (Estático)
+        // Usa o nome do ficheiro sem extensão como chave
+        if (gestorEstatico.getTexture("map_void") != null) {
+            batch.draw(gestorEstatico.getTexture("map_void"), -1000, -1000);
+        }
+        if (gestorEstatico.getTexture("mapa1") != null) {
+            batch.draw(gestorEstatico.getTexture("mapa1"), 0, 0);
+        }
+
+
+
+        // 3. Desenhar Jogador
+        if (framePlayer != null) {
+            batch.draw(framePlayer, (int)x, (int)y);
+        }
+
+        // 2. Desenhar Boss (Exemplo de posição fixa)
+        if (frameClown != null) {
+            batch.draw(frameClown, 700, 700);
+        }
+
+        batch.end();
+    }
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        gestorEstatico.dispose();
+        gestorAnimado.dispose();
+    }
+}
