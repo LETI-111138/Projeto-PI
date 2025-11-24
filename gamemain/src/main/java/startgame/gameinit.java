@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import startgame.Objects.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,10 +26,10 @@ public class gameinit extends ApplicationAdapter {
     // Variáveis para o Jogador (MC)
     HashMap<String,Animation<TextureRegion>> animPlayer;
     float stateTime = 0f;
-    float x = 100, y = 100;
+    float x = 1000, y = 1000;
     float velocidade = 80;
 
-    // Variáveis para o Boss (Clown) - Apenas exemplo de como carregar o segundo
+    //Lista com animações de assets animados
     Animation<TextureRegion> animBoss;
 
     final int LARGURA_MUNDO = 2000;
@@ -39,7 +40,7 @@ public class gameinit extends ApplicationAdapter {
         batch = new SpriteBatch();
         animPlayer = new HashMap<>();
         // 1. INICIALIZAR GESTORES
-        gestorEstatico = new StaticImage(); // Carrega automaticamente 'mapa1' e 'map_void'
+        gestorEstatico = new StaticImage(); // Carrega automaticamente as imagens estáticas para o objeto
         gestorAnimado = new AnimatedImage();
 
 
@@ -48,11 +49,11 @@ public class gameinit extends ApplicationAdapter {
         // Guardar no mapa (agora já não dá erro)
         animPlayer.put("player", gestorAnimado.getAnimacao("player"));
 
-        // Boss (Clown)
-        gestorAnimado.criarAnimacao("clownboss-Sheet.png", "boss", 8, 1, 0.1f);
+        // Inimigo esqueleto (exemplo para visualização do procedimento de chamada das animações para o GUI)
+        gestorAnimado.criarAnimacao("skeleton-Sheet.png", "skeleton", 8, 1, 0.1f);
 
-        // Atenção: Aqui tinha um erro de copy-paste, estava a ir buscar "player" em vez de "boss"
-        animPlayer.put("boss", gestorAnimado.getAnimacao("boss"));
+        // Atenção: Aqui tinha um erro de copy-paste, estava a ir buscar "player" em vez de "skeleton"
+        animPlayer.put("skeleton", gestorAnimado.getAnimacao("skeleton"));
 
         // 3. CONFIGURAR CÂMARA
         camera = new OrthographicCamera();
@@ -80,11 +81,11 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // --- OBTER FRAMES ATUAIS ---
-        TextureRegion frameClown = animPlayer.get("boss").getKeyFrame(stateTime, true);
+        TextureRegion frameEnemy = animPlayer.get("skeleton").getKeyFrame(stateTime, true);
 
         // --- CÂMARA ---
-        //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameClown.getRegionWidth());
-        //y = MathUtils.clamp(y, 0, ALTURA_MUNDO - frameClown.getRegionHeight());
+        //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameEnemy.getRegionWidth());
+        //y = MathUtils.clamp(y, 0, ALTURA_MUNDO - frameEnemy.getRegionHeight());
 
 
         // --- OBTER FRAMES ATUAIS ---
@@ -112,14 +113,16 @@ public class gameinit extends ApplicationAdapter {
 
         // 1. Desenhar Fundo (Estático)
         // Usa o nome do ficheiro sem extensão como chave
-        if (gestorEstatico.getTexture("map_void") != null) {
-            batch.draw(gestorEstatico.getTexture("map_void"), -1000, -1000);
+        if (gestorEstatico.getTexture("mapvoid") != null) {
+            batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
         }
         if (gestorEstatico.getTexture("mapa1") != null) {
             batch.draw(gestorEstatico.getTexture("mapa1"), 0, 0);
         }
 
-
+        if (gestorEstatico.getTexture("Basedoor") != null) {
+            batch.draw(gestorEstatico.getTexture("Basedoor"), 350, 350);
+        }
 
         // 3. Desenhar Jogador
         if (framePlayer != null) {
@@ -127,8 +130,8 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // 2. Desenhar Boss (Exemplo de posição fixa)
-        if (frameClown != null) {
-            batch.draw(frameClown, 700, 700);
+        if (frameEnemy != null) {
+            batch.draw(frameEnemy, 700, 700);
         }
 
         batch.end();
