@@ -1,28 +1,46 @@
 package startgame;
 
 public class Position {
-    int x;
-    int y;
+    float x;
+    float y;
 
-    public Position(int x, int y) {
+    public Position(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public void setX(int x) {
+    public void setX(float x) {
         this.x = x;
     }
 
-    public void setY(int y) {
+    public void setY(float y) {
         this.y = y;
     }
 
-    public int getX() {
+    public void setPosition(Position pos) {
+        this.x = pos.x;
+        this.y = pos.y;
+    }
+
+    public float getX() {
         return x;
     }
 
-    public int getY() {
+    public float getY() {
         return y;
+    }
+
+    public void addX(float px){
+     x +=px;
+    }
+
+    public void addY(float pY){
+        y +=pY;
+    }
+
+    public void addPosition(Position pAdd){
+        x+=pAdd.x;
+        y+=pAdd.y;
     }
 
     @Override
