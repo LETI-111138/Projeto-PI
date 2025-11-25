@@ -10,8 +10,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import startgame.Objects.*;
+import startgame.RNG.Distribuicoes;
 
-import java.util.ArrayList;
+import java.util.ArrayList; // Import necessário
+
+
 import java.util.HashMap;
 
 public class gameinit extends ApplicationAdapter {
@@ -23,42 +26,93 @@ public class gameinit extends ApplicationAdapter {
     StaticImage gestorEstatico;
     AnimatedImage gestorAnimado;
 
+    // --- HUD (INTERFACE) ---
+    OrthographicCamera hudCamera;
+    // Estatísticas para mostrar
+    int vidaJogar = 100;
+    int pontuacao = 0;
+
     // Variáveis para o Jogador (MC)
-    HashMap<String,Animation<TextureRegion>> animPlayer;
+    HashMap<String,Animation<TextureRegion>> animAll;
     float stateTime = 0f;
     float x = 1000, y = 1000;
     float velocidade = 80;
 
-    //Lista com animações de assets animados
-    Animation<TextureRegion> animBoss;
+    // Atributos em relação ao número de Itens no jogo e a sua probabilidade de aparecerem na sala
+    int nItems = 0;
+    ArrayList<Position> posItems;
+
+    // Índice para controlar a direção (0=Baixo, 1=Esq, 2=Dir, 3=Cima - Ajusta à tua imagem!)
+    ArrayList<Position> posicoesInimigos;
+
 
     final int LARGURA_MUNDO = 2000;
     final int ALTURA_MUNDO = 2000;
 
+
     @Override
     public void create() {
         batch = new SpriteBatch();
-        animPlayer = new HashMap<>();
+        animAll = new HashMap<>();
         // 1. INICIALIZAR GESTORES
         gestorEstatico = new StaticImage(); // Carrega automaticamente as imagens estáticas para o objeto
         gestorAnimado = new AnimatedImage();
-
+        //Logica de VAs
+        posicoesInimigos = new ArrayList<>();
+        posItems = new ArrayList<>();
+        hudCamera = new OrthographicCamera();
 
         gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
-
-        // Guardar no mapa (agora já não dá erro)
-        animPlayer.put("player", gestorAnimado.getAnimacao("player"));
+        animAll.put("player", gestorAnimado.getAnimacao("player"));
 
         // Inimigo esqueleto (exemplo para visualização do procedimento de chamada das animações para o GUI)
         gestorAnimado.criarAnimacao("skeleton-Sheet.png", "skeleton", 8, 1, 0.1f);
+        animAll.put("skeleton", gestorAnimado.getAnimacao("skeleton"));
 
-        // Atenção: Aqui tinha um erro de copy-paste, estava a ir buscar "player" em vez de "skeleton"
-        animPlayer.put("skeleton", gestorAnimado.getAnimacao("skeleton"));
+
+
+        int qtdInimigos = Distribuicoes.gerarPoisson(5.0);
+
+        System.out.println("=== GERAÇÃO DE NÍVEL ===");
+        System.out.println("Inimigos Gerados (Poisson): " + qtdInimigos);
+
+        // VARIÁVEL ALEATÓRIA UNIFORME
+        // Define ONDE cada inimigo aparece
+        for (int i = 0; i < qtdInimigos; i++) {
+            // Gera X entre 0 e o limite do mundo (com margem de 100px)
+
+            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+            // Gera Y entre 0 e o limite do mundo
+            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+            posicoesInimigos.add(new Position(posX, posY));
+            System.out.println("Inimigo " + i + " em: " + (int) posX + ", " + (int) posY);
+        }
+
+        // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
+        nItems = Distribuicoes.gerarBinomial(10, 0.5f);
+        System.out.println(nItems);
+
+        for (int i = 0; i < nItems; i++) {
+            // Gera X entre 0 e o limite do mundo (com margem de 100px)
+
+            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+            // Gera Y entre 0 e o limite do mundo
+            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+            posItems.add(new Position(posX, posY));
+            System.out.println("Item " + i + " em: " + (int) posX + ", " + (int) posY);
+        }
 
         // 3. CONFIGURAR CÂMARA
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); // Ou Gdx.graphics.getWidth()
         camera.zoom = 0.5f;
+
+
+        // Câmara HUD com o tamanho real da janela (ex: 1920x1080)
+        hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
     }
 
     @Override
@@ -81,7 +135,7 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // --- OBTER FRAMES ATUAIS ---
-        TextureRegion frameEnemy = animPlayer.get("skeleton").getKeyFrame(stateTime, true);
+        TextureRegion frameEnemy = animAll.get("skeleton").getKeyFrame(stateTime, true);
 
         // --- CÂMARA ---
         //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameEnemy.getRegionWidth());
@@ -89,7 +143,7 @@ public class gameinit extends ApplicationAdapter {
 
 
         // --- OBTER FRAMES ATUAIS ---
-        TextureRegion framePlayer = animPlayer.get("player").getKeyFrame(stateTime, true);
+        TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
 
         // --- CÂMARA ---
         x = MathUtils.clamp(x, 0, LARGURA_MUNDO - framePlayer.getRegionWidth());
@@ -107,9 +161,10 @@ public class gameinit extends ApplicationAdapter {
         camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
         camera.position.set(x + framePlayer.getRegionWidth()/2f, y  + framePlayer.getRegionHeight()/2f, 0);
         camera.update();
-        batch.setProjectionMatrix(camera.combined);
 
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
 
         // 1. Desenhar Fundo (Estático)
         // Usa o nome do ficheiro sem extensão como chave
@@ -124,14 +179,40 @@ public class gameinit extends ApplicationAdapter {
             batch.draw(gestorEstatico.getTexture("Basedoor"), 350, 350);
         }
 
+        // 1.5. Desenhar Itens (Estáticos)
+        if (gestorEstatico.getTexture("coin") != null && posItems != null) {
+            for (Position pos : posItems) {
+                batch.draw(gestorEstatico.getTexture("coin"), (int) pos.getX(), (int) pos.getY());
+            }
+        }
+
+        // 2. Desenhar Inimigos
+        if (frameEnemy != null) {
+            for (Position pos : posicoesInimigos) {
+                batch.draw(frameEnemy, (int) pos.getX(), (int) pos.getY());
+            }
+        }
+
+
         // 3. Desenhar Jogador
         if (framePlayer != null) {
             batch.draw(framePlayer, (int)x, (int)y);
         }
 
-        // 2. Desenhar Boss (Exemplo de posição fixa)
-        if (frameEnemy != null) {
-            batch.draw(frameEnemy, 700, 700);
+
+
+        batch.end();
+
+        //Render para câmera do HUD
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        // EXEMPLO 1: Desenhar uma imagem de "healthbar" (Vida)
+        // Assumindo que tens um ficheiro "healthbar.png" na pasta assets/Static
+        if (gestorEstatico.getTexture("healthbar") != null) {
+            // Desenha a healthbar fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("healthbar"), 20, Gdx.graphics.getHeight() - 120);
         }
 
         batch.end();

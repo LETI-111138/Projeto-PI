@@ -5,6 +5,7 @@ import java.util.Random;
 
 public class Distribuicoes {
 
+    // Classe do java random ja que é mais versátil que o método math.random()
     private static Random random = new Random();
 
     /**
@@ -12,6 +13,7 @@ public class Distribuicoes {
      * Algoritmo de Knuth (ideal para simulações simples).
      * @param lambda A média de ocorrências esperada (ex: 5 inimigos).
      * @return O número de eventos (inimigos) gerado.
+     * V.A Discreta
      */
     public static int gerarPoisson(double lambda) {
         double L = Math.exp(-lambda);
@@ -27,13 +29,27 @@ public class Distribuicoes {
     }
 
     /**
-     * Gera um número aleatório segundo a Distribuição Uniforme Contínua.
-     * @param min Valor mínimo.
-     * @param max Valor máximo.
-     * @return Um valor float entre min e max.
+     * Gera um número aleatório segundo a Distribuição Uniforme Contínua || V.A Contínua
      */
-    public static float gerarUniforme(float min, float max) {
+    public static float gerarUniforme(int min, int max) {
         // Fórmula: X = min + (max - min) * U
-        return min + (max - min) * random.nextFloat();
+        float x = 0;
+            do{
+                float p= random.nextFloat();
+                System.out.println(p);
+               x =  min + (max - min) * p;
+            } while (x >= 2000 || x <= 0);
+               System.out.println(x);
+        return x;
+    }
+
+    public static int gerarBinomial(int n, float p) {
+        int sucessos = 0;
+        for (int i = 0; i < n; i++) {
+            if (random.nextFloat() < p) {
+                sucessos++;
+            }
+        }
+        return sucessos;
     }
 }
