@@ -215,6 +215,16 @@ public class gameinit extends ApplicationAdapter {
             batch.draw(gestorEstatico.getTexture("healthbar"), 20, Gdx.graphics.getHeight() - 120);
         }
 
+        if (gestorEstatico.getTexture("mc_icon") != null) {
+            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("mc_icon"), 40, 40);
+        }
+
+        if (gestorEstatico.getTexture("StaticHeart") != null) {
+            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("StaticHeart"), 270, Gdx.graphics.getHeight() - 110);
+        }
+
         batch.end();
     }
 
