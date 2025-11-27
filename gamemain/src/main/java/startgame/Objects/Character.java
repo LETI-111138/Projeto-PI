@@ -47,7 +47,7 @@ public abstract class Character {
         return position;
     }
 
-    public void names_of_sheets(){
+    public void names_of_sheets_anim(){
         HashMap<String, Animation<TextureRegion>> allAnim= AnimatedImage.getAnimAll();
         for(Map.Entry<String, Animation<TextureRegion>> entry : allAnim.entrySet()){
             for(String s : animNames){

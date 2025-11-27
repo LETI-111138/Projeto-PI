@@ -17,5 +17,5 @@ Conceito: És um Slime que tem de limpar salas numa masmorra (Dungeon). Ao acaba
 - V.A. Discreta (Binomial): Probabilidade das próximas salas serem "Tesouro" vs "Combate".
 - V.A. Discreta (Uniforme): Ordem aleatória dos Bosses (Permutação).
 - V.A. Contínua (Normal): Dano de Ataque do Slime.
-- V.A. Contínua (Exponencial): Tempo de ativação de armadilhas.
+- V.A. Contínua (Exponencial): Movimentação Aleatória dos Inimigos.
 - V.A. Contínua (Uniforme): Posição $(X, Y)$ dos itens no chão.

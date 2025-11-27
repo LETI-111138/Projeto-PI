@@ -9,7 +9,7 @@ import java.util.HashMap;
 public class StaticImage implements carregarAssets {
 
     // HashMap para guardar as texturas: "NomeDoFicheiro" -> Textura
-    private HashMap<String, Texture> texturasMap;
+    public static HashMap<String, Texture> texturasMap;
 
     public StaticImage() {
         texturasMap = new HashMap<>();
@@ -48,6 +48,10 @@ public class StaticImage implements carregarAssets {
             }
         }
         return lista;
+    }
+
+    public static HashMap<String, Texture> getStaticAll() {
+        return texturasMap;
     }
 
     @Override

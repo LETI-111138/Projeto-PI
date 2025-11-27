@@ -4,8 +4,8 @@ import startgame.Position;
 
 public class ClownBoss extends Enemie{
 
-    public ClownBoss(Position position, int health, int atkD) {
-        super(position, health, atkD);
+    public ClownBoss(Position position) {
+        super(position, 500, 30, 70f);
         this.putKeys("clownboss");
     }
 

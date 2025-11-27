@@ -38,6 +38,16 @@ public class Position {
         y +=pY;
     }
 
+    public void rmX(float px){
+        x -=px;
+    }
+
+    public void rmY(float pY){
+        y -=pY;
+    }
+
+
+
     public void addPosition(Position pAdd){
         x+=pAdd.x;
         y+=pAdd.y;

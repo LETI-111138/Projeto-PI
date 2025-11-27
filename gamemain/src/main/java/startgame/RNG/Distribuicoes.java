@@ -52,4 +52,15 @@ public class Distribuicoes {
         }
         return sucessos;
     }
+
+    // Em startgame/RNG/Distribuicoes.java
+
+    /**
+     * V.A. Contínua: Exponencial
+     * Movimentação Aleatoria Inimigos
+     */
+    public static float gerarExponencial(double lambda) {
+        // Fórmula: X = -ln(1-U) / lambda
+        return (float) (-Math.log(1 - random.nextDouble()) / lambda);
+    }
 }

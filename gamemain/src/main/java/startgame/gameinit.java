@@ -26,6 +26,8 @@ public class gameinit extends ApplicationAdapter {
     StaticImage gestorEstatico;
     AnimatedImage gestorAnimado;
 
+    ArrayList <Skeleton> sklts;
+
     // --- HUD (INTERFACE) ---
     OrthographicCamera hudCamera;
     // Estatísticas para mostrar
@@ -34,9 +36,7 @@ public class gameinit extends ApplicationAdapter {
 
     // Variáveis para o Jogador (MC)
     HashMap<String,Animation<TextureRegion>> animAll;
-    float stateTime = 0f;
-    float x = 1000, y = 1000;
-    float velocidade = 80;
+    public static float stateTime = 0f;
 
     // Atributos em relação ao número de Itens no jogo e a sua probabilidade de aparecerem na sala
     int nItems = 0;
@@ -61,6 +61,7 @@ public class gameinit extends ApplicationAdapter {
         posicoesInimigos = new ArrayList<>();
         posItems = new ArrayList<>();
         hudCamera = new OrthographicCamera();
+        sklts = new ArrayList<>();
 
         gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
         animAll.put("player", gestorAnimado.getAnimacao("player"));
@@ -85,7 +86,9 @@ public class gameinit extends ApplicationAdapter {
             // Gera Y entre 0 e o limite do mundo
             float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
 
-            posicoesInimigos.add(new Position(posX, posY));
+            Skeleton esqueleto = new Skeleton(new Position(posX, posY));
+
+            sklts.add(esqueleto);
             System.out.println("Inimigo " + i + " em: " + (int) posX + ", " + (int) posY);
         }
 
@@ -120,14 +123,13 @@ public class gameinit extends ApplicationAdapter {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        float delta = Gdx.graphics.getDeltaTime();
-        stateTime += delta;
+
+        Mc.getInstance().setDelta(Gdx.graphics.getDeltaTime());
+        stateTime += Mc.getInstance().getDelta();
 
         // --- MOVIMENTO ---
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) x -= velocidade * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) x += velocidade * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) y += velocidade * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) y -= velocidade * delta;
+        Mc.getInstance().move();
+
 
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
@@ -146,20 +148,20 @@ public class gameinit extends ApplicationAdapter {
         TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
 
         // --- CÂMARA ---
-        x = MathUtils.clamp(x, 0, LARGURA_MUNDO - framePlayer.getRegionWidth());
-        y = MathUtils.clamp(y, 0, ALTURA_MUNDO - framePlayer.getRegionHeight());
+        Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
+        Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
 
 
 
         if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-            camera.zoom -= 1.0f * delta; // Aproximar camera do personagem
+            camera.zoom -= 1.0f * Mc.getInstance().getDelta(); // Aproximar camera do personagem
         }
         if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
-            camera.zoom += 1.0f * delta; // Afastar camara do personagem
+            camera.zoom += 1.0f * Mc.getInstance().getDelta(); // Afastar camara do personagem
         }
 
         camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
-        camera.position.set(x + framePlayer.getRegionWidth()/2f, y  + framePlayer.getRegionHeight()/2f, 0);
+        camera.position.set(Mc.getInstance().getPosition().getX() + framePlayer.getRegionWidth()/2f, Mc.getInstance().getPosition().getY()  + framePlayer.getRegionHeight()/2f, 0);
         camera.update();
 
         batch.setProjectionMatrix(camera.combined);
@@ -188,15 +190,16 @@ public class gameinit extends ApplicationAdapter {
 
         // 2. Desenhar Inimigos
         if (frameEnemy != null) {
-            for (Position pos : posicoesInimigos) {
-                batch.draw(frameEnemy, (int) pos.getX(), (int) pos.getY());
+            for (Skeleton s : sklts) {
+                s.move();
+                batch.draw(frameEnemy, (int) s.getPosition().getX(), (int) s.getPosition().getY());
             }
         }
 
 
         // 3. Desenhar Jogador
         if (framePlayer != null) {
-            batch.draw(framePlayer, (int)x, (int)y);
+            batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
         }
 
 
@@ -226,6 +229,18 @@ public class gameinit extends ApplicationAdapter {
         }
 
         batch.end();
+    }
+
+    public static boolean withinbounds(Position position){
+    if(position.getX()<= 2000 && position.getX()>= 0 && position.getY()<= 2000 && position.getY()>= 0){
+        return true;
+    }else{
+        return false;
+    }
+    }
+
+    public static float getStateTime(){
+        return stateTime;
     }
 
 
