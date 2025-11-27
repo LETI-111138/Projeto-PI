@@ -11,9 +11,9 @@ import java.util.HashMap;
 public class AnimatedImage implements carregarAssets {
 
     // Guarda as animações prontas a usar
-    private HashMap<String, Animation<TextureRegion>> animacoesMap;
+    public static HashMap<String, Animation<TextureRegion>> animacoesMap;
     // Guarda as folhas originais para limpar memória
-    private ArrayList<Texture> sheets;
+    public static ArrayList<Texture> sheets;
 
     public AnimatedImage() {
         animacoesMap = new HashMap<>();
@@ -53,7 +53,14 @@ public class AnimatedImage implements carregarAssets {
         return animacoesMap.get(nomeChave);
     }
 
-    public void cameraAnim(){}
+    //public void cameraAnim(){}
+
+
+    public static HashMap<String,Animation<TextureRegion>> getAnimAll(){
+        return animacoesMap;
+    }
+
+    public ArrayList<Texture> getSheets() {return sheets;}
 
     @Override
     public void dispose() {

@@ -8,7 +8,5 @@ public abstract class Enemie extends Character {
      super(position, health, atkD);
     }
 
-    public void move(){
-
-    }
+    public abstract void move();
 }
