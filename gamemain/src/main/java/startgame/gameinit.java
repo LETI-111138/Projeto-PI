@@ -46,8 +46,8 @@ public class gameinit extends ApplicationAdapter {
     ArrayList<Position> posicoesInimigos;
 
 
-    final int LARGURA_MUNDO = 2000;
-    final int ALTURA_MUNDO = 2000;
+    final static int LARGURA_MUNDO = 2000;
+    final static int ALTURA_MUNDO = 2000;
 
 
     @Override
@@ -191,6 +191,7 @@ public class gameinit extends ApplicationAdapter {
         // 2. Desenhar Inimigos
         if (frameEnemy != null) {
             for (Skeleton s : sklts) {
+                s.giveF(frameEnemy);
                 s.move();
                 batch.draw(frameEnemy, (int) s.getPosition().getX(), (int) s.getPosition().getY());
             }
@@ -241,6 +242,14 @@ public class gameinit extends ApplicationAdapter {
 
     public static float getStateTime(){
         return stateTime;
+    }
+
+    public static int getLarguraMundo(){
+        return LARGURA_MUNDO;
+    }
+
+    public static int getAlturaMundo(){
+        return ALTURA_MUNDO;
     }
 
 
