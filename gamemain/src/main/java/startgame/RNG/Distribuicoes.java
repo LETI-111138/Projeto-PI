@@ -34,11 +34,11 @@ public class Distribuicoes {
     public static float gerarUniforme(int min, int max) {
         // Fórmula: X = min + (max - min) * U
         float x = 0;
-            do{
+//            do{
                 float p= random.nextFloat();
                 System.out.println(p);
                x =  min + (max - min) * p;
-            } while (x >= 2000 || x <= 0);
+//            } while (x >= 2000 || x <= 0);
                System.out.println(x);
         return x;
     }
@@ -62,5 +62,15 @@ public class Distribuicoes {
     public static float gerarExponencial(double lambda) {
         // Fórmula: X = -ln(1-U) / lambda
         return (float) (-Math.log(1 - random.nextDouble()) / lambda);
+    }
+
+    /**
+     * V.A. Contínua: Normal (Box-Muller Transform)
+     * Valor aleatorio de dano
+     * Já que existe uma hipótese de Critical Hit será necessária uma certa aleatoriedade em relação ao cálculo de dano dos Objetos da Classe Character
+     */
+    public static float gerarNormal(float media, float desvioPadrao) {
+        // nextGaussian() usa a transformação de Box-Muller internamente
+        return (float) (media + random.nextGaussian() * desvioPadrao);
     }
 }

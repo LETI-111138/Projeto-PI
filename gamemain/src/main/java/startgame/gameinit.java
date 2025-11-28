@@ -30,9 +30,12 @@ public class gameinit extends ApplicationAdapter {
 
     // --- HUD (INTERFACE) ---
     OrthographicCamera hudCamera;
-    // Estatísticas para mostrar
-    int vidaJogar = 100;
-    int pontuacao = 0;
+    com.badlogic.gdx.graphics.g2d.BitmapFont font;
+    /** Estatísticas para mostrar
+     * int vidaJogar = 100;
+     * int pontuacao = 0;
+     * */
+
 
     // Variáveis para o Jogador (MC)
     HashMap<String,Animation<TextureRegion>> animAll;
@@ -61,8 +64,16 @@ public class gameinit extends ApplicationAdapter {
         //Logica de VAs
         posicoesInimigos = new ArrayList<>();
         posItems = new ArrayList<>();
+
+        // Inicialização de variáveis relativas ao HUD
         hudCamera = new OrthographicCamera();
+        font = new com.badlogic.gdx.graphics.g2d.BitmapFont();
+        font.getData().setScale(2); // Aumentar o tamanho do texto (opcional)
+        font.setColor(1, 1, 1, 1);  // Cor Branca
+
+        // Inimigos esqueletos guardados aqui
         sklts = new ArrayList<>();
+
         itemObjects = new ArrayList<>();
 
         gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
@@ -229,21 +240,25 @@ public class gameinit extends ApplicationAdapter {
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
-        // EXEMPLO 1: Desenhar uma imagem de "healthbar" (Vida)
-        // Assumindo que tens um ficheiro "healthbar.png" na pasta assets/Static
+        //Desenha HUD (Heads-Up Display)
         if (gestorEstatico.getTexture("healthbar") != null) {
-            // Desenha a healthbar fixa no canto superior esquerdo (X=20, Y=Altura-50)
-            batch.draw(gestorEstatico.getTexture("healthbar"), 20, Gdx.graphics.getHeight() - 120);
+            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
+            batch.draw(gestorEstatico.getTexture("healthbar"), 0, Gdx.graphics.getHeight() - 100);
         }
 
         if (gestorEstatico.getTexture("mc_icon") != null) {
             // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
-            batch.draw(gestorEstatico.getTexture("mc_icon"), 40, 40);
+            batch.draw(gestorEstatico.getTexture("mc_icon"), 20, 20);
         }
 
         if (gestorEstatico.getTexture("StaticHeart") != null) {
             // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
-            batch.draw(gestorEstatico.getTexture("StaticHeart"), 270, Gdx.graphics.getHeight() - 110);
+            batch.draw(gestorEstatico.getTexture("StaticHeart"), 250, Gdx.graphics.getHeight() - 90);
+        }
+
+        if (gestorEstatico.getTexture("coin_HUD") != null) {
+            font.draw(batch, "COINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
+            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
         }
 
         batch.end();
