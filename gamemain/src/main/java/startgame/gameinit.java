@@ -40,7 +40,8 @@ public class gameinit extends ApplicationAdapter {
 
     // Atributos em relação ao número de Itens no jogo e a sua probabilidade de aparecerem na sala
     int nItems = 0;
-    ArrayList<Position> posItems;
+    public static ArrayList<Position> posItems;
+    public static ArrayList<Coin> itemObjects;
 
     // Índice para controlar a direção (0=Baixo, 1=Esq, 2=Dir, 3=Cima - Ajusta à tua imagem!)
     ArrayList<Position> posicoesInimigos;
@@ -62,6 +63,7 @@ public class gameinit extends ApplicationAdapter {
         posItems = new ArrayList<>();
         hudCamera = new OrthographicCamera();
         sklts = new ArrayList<>();
+        itemObjects = new ArrayList<>();
 
         gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
         animAll.put("player", gestorAnimado.getAnimacao("player"));
@@ -103,6 +105,7 @@ public class gameinit extends ApplicationAdapter {
             // Gera Y entre 0 e o limite do mundo
             float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
 
+            itemObjects.add(new Coin(new Position(posX, posY)));
             posItems.add(new Position(posX, posY));
             System.out.println("Item " + i + " em: " + (int) posX + ", " + (int) posY);
         }
@@ -164,6 +167,19 @@ public class gameinit extends ApplicationAdapter {
         camera.position.set(Mc.getInstance().getPosition().getX() + framePlayer.getRegionWidth()/2f, Mc.getInstance().getPosition().getY()  + framePlayer.getRegionHeight()/2f, 0);
         camera.update();
 
+
+        if(!itemObjects.isEmpty()) {
+            ArrayList<Coin> aux = new ArrayList<>();
+            for (Coin c : itemObjects) {
+              if(Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 20)){
+                  nItems--;
+                  c.consume(Mc.getInstance());
+                  aux.add(c);
+              }
+            }
+            itemObjects.removeAll(aux);
+        }
+
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
@@ -183,9 +199,10 @@ public class gameinit extends ApplicationAdapter {
 
         // 1.5. Desenhar Itens (Estáticos)
         if (gestorEstatico.getTexture("coin") != null && posItems != null) {
-            for (Position pos : posItems) {
-                batch.draw(gestorEstatico.getTexture("coin"), (int) pos.getX(), (int) pos.getY());
-            }
+                for (Position pos : posItems) {
+                        batch.draw(gestorEstatico.getTexture("coin"), (int) pos.getX(), (int) pos.getY());
+                }
+
         }
 
         // 2. Desenhar Inimigos
@@ -250,6 +267,14 @@ public class gameinit extends ApplicationAdapter {
 
     public static int getAlturaMundo(){
         return ALTURA_MUNDO;
+    }
+
+    public static ArrayList<Position> getposItems() {
+        return posItems;
+    }
+
+    public static void rmItem(Position position){
+        posItems.remove(position);
     }
 
 

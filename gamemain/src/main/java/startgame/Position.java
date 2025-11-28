@@ -53,6 +53,22 @@ public class Position {
         y+=pAdd.y;
     }
 
+
+    public float distanceTo(float targetX, float targetY) {
+        float dx = this.x - targetX;
+        float dy = this.y - targetY;
+        // Teorema de Pitágoras: a^2 + b^2 = c^2
+        return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Verifica se uma posição alvo está dentro de um certo alcance.
+     */
+    public boolean isWithinRange(float targetX, float targetY, float range) {
+        return distanceTo(targetX, targetY) <= range;
+    }
+
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
