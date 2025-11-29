@@ -35,6 +35,8 @@ public abstract class Character {
         return atkD;
     }
 
+    public void addAtkD(int x) {atkD+=x;}
+
     public void setHealth(int n) {
         health = n;
     }
