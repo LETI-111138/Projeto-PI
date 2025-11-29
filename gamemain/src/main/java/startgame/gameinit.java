@@ -42,9 +42,10 @@ public class gameinit extends ApplicationAdapter {
     public static float stateTime = 0f;
 
     // Atributos em relação ao número de Itens no jogo e a sua probabilidade de aparecerem na sala
-    int nItems = 0;
+    int nCoins = 0;
+    int nSwords = 0;
     public static ArrayList<Position> posItems;
-    public static ArrayList<Coin> itemObjects;
+    public static ArrayList<staticAssets> itemObjects;
 
     // Índice para controlar a direção (0=Baixo, 1=Esq, 2=Dir, 3=Cima - Ajusta à tua imagem!)
     ArrayList<Position> posicoesInimigos;
@@ -79,12 +80,17 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
         animAll.put("player", gestorAnimado.getAnimacao("player"));
 
-        // Inimigo esqueleto (exemplo para visualização do procedimento de chamada das animações para o GUI)
+        // Inimigo esqueleto
         gestorAnimado.criarAnimacao("skeleton-Sheet.png", "skeleton", 8, 1, 0.1f);
         animAll.put("skeleton", gestorAnimado.getAnimacao("skeleton"));
 
+        // Inimigo zombie
         gestorAnimado.criarAnimacao("zombie.png", "zombie", 12, 1, 0.1f);
         animAll.put("zombie", gestorAnimado.getAnimacao("zombie"));
+
+        // Inimigo dark mage
+        gestorAnimado.criarAnimacao("darkmage.png", "darkmage", 12, 1, 0.1f);
+        animAll.put("darkmage", gestorAnimado.getAnimacao("darkmage"));
 
 
 
@@ -97,22 +103,57 @@ public class gameinit extends ApplicationAdapter {
         // Define ONDE cada inimigo aparece
         for (int i = 0; i < qtdInimigos; i++) {
             // Gera X entre 0 e o limite do mundo (com margem de 100px)
+            int n =(int) Distribuicoes.gerarUniforme(0,3);
 
-            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-            // Gera Y entre 0 e o limite do mundo
-            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
 
-            Zombie zombie = new Zombie(new Position(posX, posY));
+            switch(n) {
+                case 0:
+                float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                // Gera Y entre 0 e o limite do mundo
+                float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
 
-            enemies.add(zombie);
-            System.out.println("Inimigo " + i + " em: " + (int) posX + ", " + (int) posY);
+                Zombie zombie = new Zombie(new Position(posX, posY));
+
+                enemies.add(zombie);
+                System.out.println("Zombie " + i + " em: " + (int) posX + ", " + (int) posY); break;
+                case 1:
+                    float posX2 = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                    // Gera Y entre 0 e o limite do mundo
+                    float posY2 = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+                    Skeleton skeleton = new Skeleton(new Position(posX2, posY2));
+
+                    enemies.add(skeleton);
+                    System.out.println("Skeleton " + i + " em: " + (int) posX2 + ", " + (int) posY2); break;
+
+                case 2:
+                    float posX3 = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                    // Gera Y entre 0 e o limite do mundo
+                    float posY3 = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+                    DarkMage darkmage = new DarkMage(new Position(posX3, posY3));
+
+                    enemies.add(darkmage);
+                    System.out.println("Dark Mage " + i + " em: " + (int) posX3 + ", " + (int) posY3); break;
+
+                default:
+                    float posXdefault = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                    // Gera Y entre 0 e o limite do mundo
+                    float posYdefault = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+                    DarkMage defaulte = new DarkMage(new Position(posXdefault, posYdefault));
+
+                    enemies.add(defaulte);
+                    System.out.println("Dark Mage " + i + " em: " + (int) posXdefault + ", " + (int) posYdefault); break;
+
+            }
         }
 
         // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
-        nItems = Distribuicoes.gerarBinomial(10, 0.5f);
-        System.out.println(nItems);
+        nCoins = Distribuicoes.gerarBinomial(10, 0.5f);
+        System.out.println(nCoins + ": Moedas");
 
-        for (int i = 0; i < nItems; i++) {
+        for (int i = 0; i < nCoins; i++) {
             // Gera X entre 0 e o limite do mundo (com margem de 100px)
 
             float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
@@ -121,7 +162,23 @@ public class gameinit extends ApplicationAdapter {
 
             itemObjects.add(new Coin(new Position(posX, posY)));
             posItems.add(new Position(posX, posY));
-            System.out.println("Item " + i + " em: " + (int) posX + ", " + (int) posY);
+            System.out.println("Moeda " + i + " em: " + (int) posX + ", " + (int) posY);
+        }
+
+        // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
+        nSwords = Distribuicoes.gerarBinomial(5, 0.5f);
+        System.out.println(nSwords + ": Espadas");
+
+        for (int i = 0; i < nSwords; i++) {
+            // Gera X entre 0 e o limite do mundo (com margem de 100px)
+
+            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+            // Gera Y entre 0 e o limite do mundo
+            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+
+            itemObjects.add(new StaticSword(new Position(posX, posY)));
+            posItems.add(new Position(posX, posY));
+            System.out.println("Espada" + i + " em: " + (int) posX + ", " + (int) posY);
         }
 
         // 3. CONFIGURAR CÂMARA
@@ -154,7 +211,7 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // --- OBTER FRAMES ATUAIS ---
-        TextureRegion frameEnemy = animAll.get("zombie").getKeyFrame(stateTime, true);
+
 
         // --- CÂMARA ---
         //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameEnemy.getRegionWidth());
@@ -183,16 +240,29 @@ public class gameinit extends ApplicationAdapter {
 
 
         if(!itemObjects.isEmpty()) {
-            ArrayList<Coin> aux = new ArrayList<>();
-            for (Coin c : itemObjects) {
+            ArrayList<staticAssets> aux = new ArrayList<>();
+            for (staticAssets c : itemObjects) {
               if(Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 20)){
-                  nItems--;
-                  c.consume(Mc.getInstance());
-                  aux.add(c);
+                  switch(c.getKey()){
+                      case "coin":
+                        nCoins--;
+                        c.consume(Mc.getInstance());
+                        aux.add(c);
+                      break;
+                      case "staticsword":
+                          nSwords--;
+                          c.consume(Mc.getInstance());
+                          aux.add(c);
+                      break;
+                      default:
+                          c.consume(Mc.getInstance());
+                          aux.add(c);
+                  }
               }
             }
             itemObjects.removeAll(aux);
         }
+        System.out.println("Dano é : " + Mc.getInstance().getatkD());
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -212,21 +282,11 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // 1.5. Desenhar Itens (Estáticos)
-        if (gestorEstatico.getTexture("coin") != null && posItems != null) {
-                for (Position pos : posItems) {
-                        batch.draw(gestorEstatico.getTexture("coin"), (int) pos.getX(), (int) pos.getY());
-                }
+        drawItems();
 
-        }
+        // 2. Desenhar Inimigos
+        drawEnemies();
 
-        // 2. Desenhar Inimigos (Zombie)
-        if (frameEnemy != null) {
-            for (Enemy e : enemies) {
-                e.giveF(frameEnemy);
-                e.move();
-                batch.draw(frameEnemy, (int) e.getPosition().getX(), (int) e.getPosition().getY());
-            }
-        }
 
 
         // 3. Desenhar Jogador
@@ -298,6 +358,46 @@ public class gameinit extends ApplicationAdapter {
 
     public static void rmItem(Position position){
         posItems.remove(position);
+    }
+
+    //Desenha Inimigos
+    public void drawEnemies(){
+        for (Enemy e : enemies) {
+            if(e instanceof Zombie) {
+                TextureRegion framez = animAll.get("zombie").getKeyFrame(stateTime, true);
+                e.giveF(framez);
+                e.move();
+                batch.draw(framez, (int) e.getPosition().getX(), (int) e.getPosition().getY());
+            }else if (e instanceof Skeleton) {
+                TextureRegion frames = animAll.get("skeleton").getKeyFrame(stateTime, true);
+                e.giveF(frames);
+                e.move();
+                batch.draw(frames, (int) e.getPosition().getX(), (int) e.getPosition().getY());
+            }else if (e instanceof DarkMage) {
+                TextureRegion framedm = animAll.get("darkmage").getKeyFrame(stateTime, true);
+                e.giveF(framedm);
+                e.move();
+                batch.draw(framedm, (int) e.getPosition().getX(), (int) e.getPosition().getY());
+            }
+
+
+        }
+    }
+
+    public void drawItems(){
+        if (gestorEstatico.getTexture("coin") != null && posItems != null) {
+            for (staticAssets c : itemObjects) {
+                switch (c.getKey()) {
+                    case "coin":
+                        batch.draw(gestorEstatico.getTexture("coin"), (int) c.getPosition().getX(), (int) c.getPosition().getY());
+                        break;
+                    case "staticsword":
+                        batch.draw(gestorEstatico.getTexture("staticsword"), (int) c.getPosition().getX(), (int) c.getPosition().getY());
+                        break;
+                }
+            }
+
+        }
     }
 
 

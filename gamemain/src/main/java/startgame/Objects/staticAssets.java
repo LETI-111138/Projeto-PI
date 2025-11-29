@@ -8,16 +8,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class staticAssets extends GameObject{
+public class staticAssets extends GameObject implements Item{
 
     HashMap<String, Texture> txts;
     ArrayList<String> name_txts;
+    String key;
 
 
-    public staticAssets(Position position){
+    public staticAssets(Position position, String key){
         super(position);
         txts = new HashMap<>();
         name_txts = new ArrayList<>();
+        this.key = key;
     }
 
     public void names_of_sheets_anim(){
@@ -32,6 +34,10 @@ public class staticAssets extends GameObject{
 
     }
 
+    public String getKey(){
+        return key;
+    }
+
     public void putKeys(String key){
         name_txts.add(key);
     }
@@ -40,4 +46,8 @@ public class staticAssets extends GameObject{
 
     public HashMap<String, Texture> getAnimSprites() { return txts; }
 
+    @Override
+    public void consume(Mc mc) {
+        //por default nao faz nada;
+    }
 }
