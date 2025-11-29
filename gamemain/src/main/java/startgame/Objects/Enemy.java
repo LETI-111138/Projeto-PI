@@ -1,19 +1,28 @@
 package startgame.Objects;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import startgame.Position;
 import startgame.RNG.Distribuicoes;
 
-public abstract class Enemie extends Character {
+public abstract class Enemy extends Character {
 
     private float velocidade;
     private float tempoParaMudarDirecao = 0f;
     private float tempoDecorrido = 0f;
     private int direcaoAtual = 0; // 0=Parado, 1=Esq, 2=Dir, 3=Cima, 4=Baixo;
+    private TextureRegion currentFrame;
 
-    public Enemie(Position position, int health, int atkD, float velocidade) {
+    public Enemy(Position position, int health, int atkD, float velocidade) {
      super(position, health, atkD);
      this.velocidade = velocidade;
+     currentFrame = new TextureRegion();
     }
+
+    public void giveF(TextureRegion currentFrame) {
+        this.currentFrame = currentFrame;
+    }
+
+    public TextureRegion getCurrentFrame() {return currentFrame;}
 
     public float getVelocidade() {return velocidade;}
 

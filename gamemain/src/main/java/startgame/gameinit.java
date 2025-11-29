@@ -26,7 +26,7 @@ public class gameinit extends ApplicationAdapter {
     StaticImage gestorEstatico;
     AnimatedImage gestorAnimado;
 
-    ArrayList <Skeleton> sklts;
+    ArrayList <Enemy> enemies;
 
     // --- HUD (INTERFACE) ---
     OrthographicCamera hudCamera;
@@ -72,7 +72,7 @@ public class gameinit extends ApplicationAdapter {
         font.setColor(1, 1, 1, 1);  // Cor Branca
 
         // Inimigos esqueletos guardados aqui
-        sklts = new ArrayList<>();
+        enemies = new ArrayList<>();
 
         itemObjects = new ArrayList<>();
 
@@ -82,6 +82,9 @@ public class gameinit extends ApplicationAdapter {
         // Inimigo esqueleto (exemplo para visualização do procedimento de chamada das animações para o GUI)
         gestorAnimado.criarAnimacao("skeleton-Sheet.png", "skeleton", 8, 1, 0.1f);
         animAll.put("skeleton", gestorAnimado.getAnimacao("skeleton"));
+
+        gestorAnimado.criarAnimacao("zombie.png", "zombie", 12, 1, 0.1f);
+        animAll.put("zombie", gestorAnimado.getAnimacao("zombie"));
 
 
 
@@ -99,9 +102,9 @@ public class gameinit extends ApplicationAdapter {
             // Gera Y entre 0 e o limite do mundo
             float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
 
-            Skeleton esqueleto = new Skeleton(new Position(posX, posY));
+            Zombie zombie = new Zombie(new Position(posX, posY));
 
-            sklts.add(esqueleto);
+            enemies.add(zombie);
             System.out.println("Inimigo " + i + " em: " + (int) posX + ", " + (int) posY);
         }
 
@@ -151,7 +154,7 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // --- OBTER FRAMES ATUAIS ---
-        TextureRegion frameEnemy = animAll.get("skeleton").getKeyFrame(stateTime, true);
+        TextureRegion frameEnemy = animAll.get("zombie").getKeyFrame(stateTime, true);
 
         // --- CÂMARA ---
         //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameEnemy.getRegionWidth());
@@ -200,8 +203,8 @@ public class gameinit extends ApplicationAdapter {
         if (gestorEstatico.getTexture("mapvoid") != null) {
             batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
         }
-        if (gestorEstatico.getTexture("mapa1") != null) {
-            batch.draw(gestorEstatico.getTexture("mapa1"), 0, 0);
+        if (gestorEstatico.getTexture("mapa2") != null) {
+            batch.draw(gestorEstatico.getTexture("mapa2"), 0, 0);
         }
 
         if (gestorEstatico.getTexture("Basedoor") != null) {
@@ -216,12 +219,12 @@ public class gameinit extends ApplicationAdapter {
 
         }
 
-        // 2. Desenhar Inimigos
+        // 2. Desenhar Inimigos (Zombie)
         if (frameEnemy != null) {
-            for (Skeleton s : sklts) {
-                s.giveF(frameEnemy);
-                s.move();
-                batch.draw(frameEnemy, (int) s.getPosition().getX(), (int) s.getPosition().getY());
+            for (Enemy e : enemies) {
+                e.giveF(frameEnemy);
+                e.move();
+                batch.draw(frameEnemy, (int) e.getPosition().getX(), (int) e.getPosition().getY());
             }
         }
 
@@ -244,6 +247,11 @@ public class gameinit extends ApplicationAdapter {
         if (gestorEstatico.getTexture("healthbar") != null) {
             // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
             batch.draw(gestorEstatico.getTexture("healthbar"), 0, Gdx.graphics.getHeight() - 100);
+        }
+
+        if (gestorEstatico.getTexture("manabar") != null) {
+            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
+            batch.draw(gestorEstatico.getTexture("manabar"), 0, Gdx.graphics.getHeight() - 200);
         }
 
         if (gestorEstatico.getTexture("mc_icon") != null) {

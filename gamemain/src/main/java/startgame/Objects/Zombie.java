@@ -5,17 +5,15 @@ import com.badlogic.gdx.math.MathUtils;
 import startgame.Position;
 import startgame.gameinit;
 
-public class Skeleton extends Enemy {
+public class Zombie extends Enemy {
 
 
 
-
-    public Skeleton(Position position) {
+    public Zombie(Position position) {
         super(position, 50, 5, 80);
-        this.putKeys("skeleton");
+        this.putKeys("zombie");
         mudarDirecao();
     }
-
 
     public void move(){
         float delta = Mc.getInstance().getDelta();
@@ -50,10 +48,4 @@ public class Skeleton extends Enemy {
         this.getPosition().setY(y);
 
     }
-
-
 }
-//this.getPosition().rmX(this.getVelocidade() * Mc.getInstance().getDelta()); break; // Esquerda
-//this.getPosition().addX(this.getVelocidade() * Mc.getInstance().getDelta()); break;
-//this.getPosition().addY(this.getVelocidade() * Mc.getInstance().getDelta()); break;
-//this.getPosition().rmY(this.getVelocidade() * Mc.getInstance().getDelta()); break;
