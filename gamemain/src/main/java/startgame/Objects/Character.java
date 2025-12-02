@@ -47,20 +47,11 @@ public abstract class Character {
         return health;
     }
 
-// dentro de Character
 
-    public void takeDamage(int damage) {
-        health -= damage;
-        if (health < 0) health = 0;
-    }
 
-    public boolean isDead() {
-        return health <= 0;
-    }
 
 
     // ---------- POSIÇÃO / ANIMAÇÕES ----------
-
     public Position getPosition() {
         return position;
     }
