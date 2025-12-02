@@ -20,6 +20,7 @@ public class Main {
         config.setForegroundFPS(60);
         config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
+        config.setWindowIcon("assets/Static/gameicon.png");
 
         // Iniciar o jogo
         new Lwjgl3Application(new gameinit(), config);

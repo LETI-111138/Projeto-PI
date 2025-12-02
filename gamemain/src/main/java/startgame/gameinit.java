@@ -213,11 +213,6 @@ public class gameinit extends ApplicationAdapter {
         // --- OBTER FRAMES ATUAIS ---
 
 
-        // --- CÂMARA ---
-        //x = MathUtils.clamp(x, 0, LARGURA_MUNDO - frameEnemy.getRegionWidth());
-        //y = MathUtils.clamp(y, 0, ALTURA_MUNDO - frameEnemy.getRegionHeight());
-
-
         // --- OBTER FRAMES ATUAIS ---
         TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
 
@@ -262,7 +257,6 @@ public class gameinit extends ApplicationAdapter {
             }
             itemObjects.removeAll(aux);
         }
-        System.out.println("Dano é : " + Mc.getInstance().getatkD());
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -287,49 +281,15 @@ public class gameinit extends ApplicationAdapter {
         // 2. Desenhar Inimigos
         drawEnemies();
 
-
-
         // 3. Desenhar Jogador
         if (framePlayer != null) {
             batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
         }
-
-
-
         batch.end();
 
         //Render para câmera do HUD
-        hudCamera.update();
-        batch.setProjectionMatrix(hudCamera.combined);
-        batch.begin();
+        drawHUD();
 
-        //Desenha HUD (Heads-Up Display)
-        if (gestorEstatico.getTexture("healthbar") != null) {
-            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
-            batch.draw(gestorEstatico.getTexture("healthbar"), 0, Gdx.graphics.getHeight() - 100);
-        }
-
-        if (gestorEstatico.getTexture("manabar") != null) {
-            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
-            batch.draw(gestorEstatico.getTexture("manabar"), 0, Gdx.graphics.getHeight() - 200);
-        }
-
-        if (gestorEstatico.getTexture("mc_icon") != null) {
-            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
-            batch.draw(gestorEstatico.getTexture("mc_icon"), 20, 20);
-        }
-
-        if (gestorEstatico.getTexture("StaticHeart") != null) {
-            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
-            batch.draw(gestorEstatico.getTexture("StaticHeart"), 250, Gdx.graphics.getHeight() - 90);
-        }
-
-        if (gestorEstatico.getTexture("coin_HUD") != null) {
-            font.draw(batch, "COINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
-            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
-        }
-
-        batch.end();
     }
 
     public static boolean withinbounds(Position position){
@@ -398,6 +358,46 @@ public class gameinit extends ApplicationAdapter {
             }
 
         }
+    }
+
+    public void drawHUD(){
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        //Desenha HUD (Heads-Up Display)
+        if (gestorEstatico.getTexture("healthbar") != null) {
+            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
+            batch.draw(gestorEstatico.getTexture("healthbar"), 0, Gdx.graphics.getHeight() - 100);
+        }
+
+        if (gestorEstatico.getTexture("manabar") != null) {
+            // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
+            batch.draw(gestorEstatico.getTexture("manabar"), 0, Gdx.graphics.getHeight() - 200);
+        }
+
+        if (gestorEstatico.getTexture("mc_icon") != null) {
+            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("mc_icon"), 20, 20);
+        }
+
+        if (gestorEstatico.getTexture("StaticHeart") != null) {
+            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("StaticHeart"), 250, Gdx.graphics.getHeight() - 90);
+        }
+        if (gestorEstatico.getTexture("manastatic") != null) {
+            // Desenha a mc_icon fixa no canto superior esquerdo (X=20, Y=Altura-50)
+            batch.draw(gestorEstatico.getTexture("manastatic"), 250, Gdx.graphics.getHeight() - 190);
+        }
+
+        if (gestorEstatico.getTexture("coin_HUD") != null) {
+            font.draw(batch, "COINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
+            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
+        }
+
+        font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 198, Gdx.graphics.getHeight() - 85);
+
+        batch.end();
     }
 
 
