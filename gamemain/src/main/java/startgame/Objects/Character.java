@@ -60,6 +60,14 @@ public abstract class Character {
         }
 
     }
+    public void takeDamage(int damage) {
+        health -= damage;
+        if (health < 0) health = 0;
+    }
+
+    public boolean isDead() {
+        return health <= 0;
+    }
 
     public void putKeys(String key){
         animNames.add(key);
