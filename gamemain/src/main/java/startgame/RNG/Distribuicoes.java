@@ -73,4 +73,14 @@ public class Distribuicoes {
         // nextGaussian() usa a transformação de Box-Muller internamente
         return (float) (media + random.nextGaussian() * desvioPadrao);
     }
+
+    /**
+     * V.A. Contínua: Normal
+     * Dano de ataque do Slime (usamos média = atkD e desvio padrão proporcional)
+     */
+    public static float gerarNormal(double media, double desvioPadrao) {
+        // random.nextGaussian() → média 0, desvio 1
+        return (float) (media + desvioPadrao * random.nextGaussian());
+    }
+
 }
