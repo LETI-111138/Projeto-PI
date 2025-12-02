@@ -76,13 +76,16 @@ public class gameinit extends ApplicationAdapter {
     private final Random random = new Random();
 
     // ---------- CONSTANTES DE COMBATE / FÍSICAS ----------
-    private static final float PLAYER_ATTACK_RANGE = 80f;      // alcance do ataque corpo-a-corpo
-    private static final float ENEMY_CONTACT_RANGE = 30f;      // distância para levar dano de contacto
+    private static final float PLAYER_ATTACK_RANGE = 60f;      // alcance do ataque corpo-a-corpo
+    private static final float ENEMY_CONTACT_RANGE = 40f;      // distância para levar dano de contacto
     private static final float PLAYER_HIT_COOLDOWN = 0.6f;     // segundos de invencibilidade depois de levar hit
     private float timeSinceLastPlayerHit = 0f;
 
     // raio mínimo entre slime e inimigos (para não ficarem em cima uns dos outros)
-    private static final float MIN_DISTANCE_BETWEEN_CHARACTERS = 20f;
+    private static final float MIN_DISTANCE_BETWEEN_CHARACTERS = 30f;
+
+    //Sprite do mapa
+    String mapaKey = "mapa1";
 
     @Override
     public void create() {
@@ -387,22 +390,23 @@ public class gameinit extends ApplicationAdapter {
         if (gestorEstatico.getTexture("mapvoid") != null) {
             batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
         }
+
         // Escolher mapa consoante tipo de sala
-        String mapaKey = "mapa1";
-        if (currentRoom != null) {
-            switch (currentRoom.getType()) {
-                case TREASURE:
-                    mapaKey = "mapa2";
-                    break;
-                case BOSS:
-                    mapaKey = "mapa2";
-                    break;
-                case COMBAT:
-                default:
-                    mapaKey = "mapa1";
-                    break;
-            }
-        }
+
+//        if (currentRoom != null) {
+//            switch (currentRoom.getType()) {
+//                case TREASURE:
+//                    mapaKey = "mapa2";
+//                    break;
+//                case BOSS:
+//                    mapaKey = "mapa2";
+//                    break;
+//                case COMBAT:
+//                default:
+//                    mapaKey = "mapa1";
+//                    break;
+//            }
+//        }
         if (gestorEstatico.getTexture(mapaKey) != null) {
             batch.draw(gestorEstatico.getTexture(mapaKey), 0, 0);
         }
@@ -515,6 +519,8 @@ public class gameinit extends ApplicationAdapter {
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
+        if(doorsVisible==true)font.draw(batch, "To enter Door press E", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
+        if(currentRoom.getType()== RoomType.TREASURE && doorsVisible == false)font.draw(batch, "Collect all items to go to next room", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
         //Desenha HUD (Heads-Up Display)
         if (gestorEstatico.getTexture("healthbar") != null) {
             // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
@@ -675,6 +681,18 @@ public class gameinit extends ApplicationAdapter {
                 System.out.println("=== TRANSIÇÃO PARA SALA ID " + nextRoom.getId() +
                         " (" + nextRoom.getType() + ") ===");
                 currentRoom = nextRoom;
+                int skinroom = (int) Distribuicoes.gerarUniforme(0,2);
+                switch(skinroom){
+                    case 0:
+                        mapaKey = "mapa1";
+                        break;
+                    case 1:
+                        mapaKey = "mapa2";
+                        break;
+                    default:
+                        mapaKey = "mapa1";
+                        break;
+                }
                 setupRoom(currentRoom);
                 break;
             }
@@ -683,7 +701,7 @@ public class gameinit extends ApplicationAdapter {
 
     // Ataque do jogador (melee) com SPACE
     private void handlePlayerAttack() {
-        if (!Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) return;
+        if (!Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) return;
 
         Position mcPos = Mc.getInstance().getPosition();
         ArrayList<Enemy> mortos = new ArrayList<>();
@@ -760,7 +778,7 @@ public class gameinit extends ApplicationAdapter {
         if (damageTexts.isEmpty()) return;
 
         ArrayList<DamageText> toRemove = new ArrayList<>();
-        for (DamageText dt : damageTexts) {
+        for (DamageText dt : damageTexts){
             dt.timeLeft -= delta;
             dt.y += 40f * delta; // sobe um bocadinho
 
