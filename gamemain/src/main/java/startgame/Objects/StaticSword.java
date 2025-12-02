@@ -19,8 +19,9 @@ public class StaticSword extends staticAssets{
     @Override
     public void consume(Mc mc){
         Mc.getInstance().addAtkD(x);
+        System.out.println("[ITEM] Apanhaste uma espada! Novo dano do slime: " + Mc.getInstance().getatkD());
         gameinit.rmItem(this.getPosition());
-
     }
+
 
 }

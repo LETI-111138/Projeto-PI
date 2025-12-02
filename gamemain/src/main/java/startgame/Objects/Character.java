@@ -25,17 +25,19 @@ public abstract class Character {
         animNames = new ArrayList<>();
     }
 
-
+    // ---------- ATAQUE / VIDA ----------
 
     public void setatkD(int x) {
-        atkD=x;
+        atkD = x;
     }
 
     public int getatkD() {
         return atkD;
     }
 
-    public void addAtkD(int x) {atkD+=x;}
+    public void addAtkD(int x) {
+        atkD += x;
+    }
 
     public void setHealth(int n) {
         health = n;
@@ -45,15 +47,29 @@ public abstract class Character {
         return health;
     }
 
+// dentro de Character
+
+    public void takeDamage(int damage) {
+        health -= damage;
+        if (health < 0) health = 0;
+    }
+
+    public boolean isDead() {
+        return health <= 0;
+    }
+
+
+    // ---------- POSIÇÃO / ANIMAÇÕES ----------
+
     public Position getPosition() {
         return position;
     }
 
-    public void names_of_sheets_anim(){
-        HashMap<String, Animation<TextureRegion>> allAnim= AnimatedImage.getAnimAll();
-        for(Map.Entry<String, Animation<TextureRegion>> entry : allAnim.entrySet()){
-            for(String s : animNames){
-                if(entry.getKey().equals(s)){
+    public void names_of_sheets_anim() {
+        HashMap<String, Animation<TextureRegion>> allAnim = AnimatedImage.getAnimAll();
+        for (Map.Entry<String, Animation<TextureRegion>> entry : allAnim.entrySet()) {
+            for (String s : animNames) {
+                if (entry.getKey().equals(s)) {
                     animSprites.put(s, entry.getValue());
                 }
             }
@@ -69,15 +85,17 @@ public abstract class Character {
         return health <= 0;
     }
 
-    public void putKeys(String key){
+    public void putKeys(String key) {
         animNames.add(key);
     }
 
-    public ArrayList<String> getAnimNames() { return animNames; }
+    public ArrayList<String> getAnimNames() {
+        return animNames;
+    }
 
-    public HashMap<String, Animation<TextureRegion>> getAnimSprites() { return animSprites; }
+    public HashMap<String, Animation<TextureRegion>> getAnimSprites() {
+        return animSprites;
+    }
 
     public abstract void move();
-
-
 }
