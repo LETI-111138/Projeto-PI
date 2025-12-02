@@ -6,15 +6,13 @@ import startgame.gameinit;
 public class Coin extends staticAssets implements Item {
 
     public Coin(Position position){
-        super(position);
+        super(position, "coin");
         this.putKeys("coin");
 
     }
 
-    public void collectCoin(int x){
-        this.consume(Mc.getInstance());
-    }
 
+    @Override
     public void consume(Mc mc){
         Mc.getInstance().addBalanceCoins(1);
         gameinit.rmItem(this.getPosition());

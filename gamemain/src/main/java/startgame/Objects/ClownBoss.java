@@ -2,7 +2,7 @@ package startgame.Objects;
 
 import startgame.Position;
 
-public class ClownBoss extends Enemie{
+public class ClownBoss extends Enemy {
 
     public ClownBoss(Position position) {
         super(position, 500, 30, 70f);

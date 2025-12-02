@@ -15,11 +15,12 @@ public class Main {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 
         // Configurações da Janela
-        config.setTitle("Projeto PI - Game Engine");
+        config.setTitle("Last Blob Standing");
         config.setWindowedMode(1920, 1080);
         config.setForegroundFPS(60);
         config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
+        config.setWindowIcon("assets/Static/gameicon.png");
 
         // Iniciar o jogo
         new Lwjgl3Application(new gameinit(), config);
