@@ -75,12 +75,23 @@ public class Distribuicoes {
     }
 
     /**
-     * V.A. Contínua: Normal
-     * Dano de ataque do Slime (usamos média = atkD e desvio padrão proporcional)
+     * V.A. Discreta: Uniforme (Permutação)
+     * Implementação do algoritmo Fisher-Yates Shuffle.
+     * Gera uma permutação aleatória onde todas as ordens têm probabilidade igual (1/n!).
+     * @param lista A lista de inteiros a baralhar (ex: IDs dos bosses).
      */
-    public static float gerarNormal(double media, double desvioPadrao) {
-        // random.nextGaussian() → média 0, desvio 1
-        return (float) (media + desvioPadrao * random.nextGaussian());
+    public static void gerarPermutacao(java.util.List<Integer> lista) {
+        // Percorre a lista do fim para o início
+        for (int i = lista.size() - 1; i > 0; i--) {
+            // Escolhe um índice aleatório j entre 0 e i (inclusive)
+            // Isto baseia-se numa Uniforme Discreta [0, i]
+            int j = random.nextInt(i + 1);
+
+            // Troca o elemento na posição i com o elemento na posição j
+            int temp = lista.get(i);
+            lista.set(i, lista.get(j));
+            lista.set(j, temp);
+        }
     }
 
 }

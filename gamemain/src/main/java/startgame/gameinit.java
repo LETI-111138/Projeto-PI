@@ -520,7 +520,7 @@ public class gameinit extends ApplicationAdapter {
         batch.begin();
 
         if(doorsVisible==true)font.draw(batch, "To enter Door press E", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
-        if(currentRoom.getType()== RoomType.TREASURE && doorsVisible == false)font.draw(batch, "Collect all items to go to next room", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
+        if(currentRoom.getType()== RoomType.TREASURE && doorsVisible == false)font.draw(batch, "Collect all items to go to next room", ((int)(Gdx.graphics.getWidth()) / 2)-130, (int)(Gdx.graphics.getHeight()) / 2);
         //Desenha HUD (Heads-Up Display)
         if (gestorEstatico.getTexture("healthbar") != null) {
             // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
