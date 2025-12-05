@@ -34,8 +34,6 @@ public class RoomManager {
             bossOrder.add(BossIndex.getByIndex(i));
             System.out.println(i);
         }
-
-        // SUBSTITUI O Collections.shuffle PELA TUA IMPLEMENTAÇÃO:
         Distribuicoes.gerarPermutacao(bossOrder);
 
         // Agora tens uma permutação uniforme validada pelo teu próprio código RNG
