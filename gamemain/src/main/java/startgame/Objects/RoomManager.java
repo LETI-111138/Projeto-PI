@@ -1,5 +1,6 @@
 package startgame.Objects;
 
+import startgame.RNG.BossIndex;
 import startgame.RNG.Distribuicoes;
 import startgame.RNG.RandomConfig;
 
@@ -13,7 +14,7 @@ public class RoomManager {
     private final Random random = new Random();
 
     // Ordem aleatória dos bosses (V.A. Discreta Uniforme – permutação)
-    private final List<Integer> bossOrder = new ArrayList<>();
+    private final List<BossIndex> bossOrder = new ArrayList<>();
     private int nextBossIndex = 0;
 
     private int nextRoomId = 1;
@@ -30,9 +31,14 @@ public class RoomManager {
     private void generateBossOrder() {
         bossOrder.clear();
         for (int i = 0; i < RandomConfig.TOTAL_BOSSES; i++) {
-            bossOrder.add(i);
+            bossOrder.add(BossIndex.getByIndex(i));
+            System.out.println(i);
         }
-        Collections.shuffle(bossOrder, random); // permutação uniforme
+
+        // SUBSTITUI O Collections.shuffle PELA TUA IMPLEMENTAÇÃO:
+        Distribuicoes.gerarPermutacao(bossOrder);
+
+        // Agora tens uma permutação uniforme validada pelo teu próprio código RNG
     }
 
     private Room generateStartingRoom() {
@@ -43,13 +49,13 @@ public class RoomManager {
     private Room generateRoom(RoomType type) {
         int id = nextRoomId++;
 
-        Integer bossId = null;
+        BossIndex boss = null;
         int enemies = 0;
         int items = 0;
 
         if (type == RoomType.BOSS) {
             if (nextBossIndex < bossOrder.size()) {
-                bossId = bossOrder.get(nextBossIndex++);
+                boss = bossOrder.get(nextBossIndex++);
             } else {
                 type = RoomType.COMBAT;
             }
@@ -76,7 +82,7 @@ public class RoomManager {
         int doors = RandomConfig.MIN_DOORS +
                 random.nextInt(RandomConfig.MAX_DOORS - RandomConfig.MIN_DOORS + 1);
 
-        return new Room(id, type, enemies, items, doors, bossId);
+        return new Room(id, type, enemies, items, doors, boss);
     }
 
     private Room generateRoom() {
@@ -109,5 +115,5 @@ public class RoomManager {
 
     public Room getCurrentRoom() { return currentRoom; }
     public List<Room> getNextOptions() { return nextOptions; }
-    public List<Integer> getBossOrder() { return bossOrder; }
+    public List<BossIndex> getBossOrder() { return bossOrder; }
 }

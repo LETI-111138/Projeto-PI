@@ -1,5 +1,7 @@
 package startgame.Objects;
 
+import startgame.RNG.BossIndex;
+
 public class Room {
 
     private final int id;
@@ -7,20 +9,20 @@ public class Room {
     private final int enemyCount;
     private final int itemCount;
     private final int numberOfDoors;
-    private final Integer bossId; // null se não for boss
+    private final BossIndex boss; // null se não for boss
 
     public Room(int id,
                 RoomType type,
                 int enemyCount,
                 int itemCount,
                 int numberOfDoors,
-                Integer bossId) {
+                BossIndex boss) {
         this.id = id;
         this.type = type;
         this.enemyCount = enemyCount;
         this.itemCount = itemCount;
         this.numberOfDoors = numberOfDoors;
-        this.bossId = bossId;
+        this.boss = boss;
     }
 
     public int getId() { return id; }
@@ -28,5 +30,5 @@ public class Room {
     public int getEnemyCount() { return enemyCount; }
     public int getItemCount() { return itemCount; }
     public int getNumberOfDoors() { return numberOfDoors; }
-    public Integer getBossId() { return bossId; }
+    public BossIndex getBoss() { return boss; }
 }
