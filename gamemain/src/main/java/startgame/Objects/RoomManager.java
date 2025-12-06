@@ -57,8 +57,6 @@ public class RoomManager {
         if (type == RoomType.BOSS) {
             if (nextBossIndex < bossOrder.size()) {
                 boss = bossOrder.get(nextBossIndex++);
-            } else {
-                type = RoomType.COMBAT;
             }
         }
 

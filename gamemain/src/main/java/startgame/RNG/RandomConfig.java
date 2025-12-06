@@ -11,7 +11,7 @@ public final class RandomConfig {
     public static final float PROB_TREASURE_ROOM = 0.30f; // 30% tesouro, 70% combate
 
     // Nº total de bosses (para a permutação)
-    public static final int TOTAL_BOSSES = 1;
+    public static final int TOTAL_BOSSES = 2;
 
     // Nº de portas possíveis
     public static final int MIN_DOORS = 2;

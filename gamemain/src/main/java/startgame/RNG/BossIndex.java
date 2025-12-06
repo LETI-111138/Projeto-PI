@@ -1,7 +1,8 @@
 package startgame.RNG;
 
 public enum BossIndex {
-BOSSCLOWN(0);
+BOSSCLOWN(0),BLUEDROPLET(1);
+
     public int index;
     BossIndex(int index) {
         this.index = index;

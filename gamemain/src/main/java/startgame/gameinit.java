@@ -130,6 +130,9 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("clownboss-Sheet.png", "bossclown", 8, 1, 0.1f);
         animAll.put("bossclown", gestorAnimado.getAnimacao("bossclown"));
 
+        gestorAnimado.criarAnimacao("bluedroplet.png", "bluedroplet", 8, 1, 0.1f);
+        animAll.put("bluedroplet", gestorAnimado.getAnimacao("bluedroplet"));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -431,6 +434,12 @@ public class gameinit extends ApplicationAdapter {
             currentBoss.move();
             batch.draw(framecb, (int) currentBoss.getPosition().getX(), (int) currentBoss.getPosition().getY());
             break;
+            case BLUEDROPLET:
+                TextureRegion framebd = animAll.get("bluedroplet").getKeyFrame(stateTime, true);
+                currentBoss.giveF(framebd);
+                currentBoss.move();
+                batch.draw(framebd, (int) currentBoss.getPosition().getX(), (int) currentBoss.getPosition().getY());
+                break;
             default:
                 break;
         }
@@ -529,10 +538,16 @@ public class gameinit extends ApplicationAdapter {
                 boss = currentRoom.getBoss();
                 switch(boss){
                     case BOSSCLOWN:
-                        float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-                        float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-                        currentBoss = new BossClown(new Position (posX, posY));
+                        float bossclownX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                        float bossclownY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                        currentBoss = new BossClown(new Position (bossclownX, bossclownY));
                         System.out.println("Boss Clown criado.");
+                        break;
+                    case BLUEDROPLET:
+                        float bluedropletX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                        float bluedropletY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                        currentBoss = new BlueDroplet(new Position (bluedropletX, bluedropletY));
+                        System.out.println("Blue Droplet Boss criado.");
                         break;
                     default:
                         break;
