@@ -11,6 +11,7 @@ import java.util.Random;
 
 public class RoomManager {
 
+    private int numberOfRooms;
     private final Random random = new Random();
 
     // Ordem aleatória dos bosses (V.A. Discreta Uniforme – permutação)
@@ -26,6 +27,7 @@ public class RoomManager {
         generateBossOrder();          // permutação dos bosses
         currentRoom = generateStartingRoom();
         nextOptions = generateNextRooms();
+        numberOfRooms = 0;
     }
 
     private void generateBossOrder() {
@@ -46,6 +48,7 @@ public class RoomManager {
 
     private Room generateRoom(RoomType type) {
         int id = nextRoomId++;
+        numberOfRooms++;
 
         BossIndex boss = null;
         int enemies = 0;
@@ -81,10 +84,16 @@ public class RoomManager {
 
     private Room generateRoom() {
         // Binomial com n=1 (Bernoulli) para tipo de sala
-        int bernoulli = Distribuicoes.gerarBinomial(1, RandomConfig.PROB_TREASURE_ROOM);
-        RoomType type = (bernoulli == 1) ? RoomType.TREASURE : RoomType.COMBAT;
+        RoomType type = null;
+        if(numberOfRooms<6){
+            int bernoulli = Distribuicoes.gerarBinomial(1, RandomConfig.PROB_TREASURE_ROOM);
+             type = (bernoulli == 1) ? RoomType.TREASURE : RoomType.COMBAT;
+        }else{
+             type = RoomType.BOSS;
+             numberOfRooms = 0;
+        }
 
-        // MAIS TARDE: podes meter regra para às X salas ser BOSS
+
         return generateRoom(type);
     }
 
@@ -110,4 +119,6 @@ public class RoomManager {
     public Room getCurrentRoom() { return currentRoom; }
     public List<Room> getNextOptions() { return nextOptions; }
     public List<BossIndex> getBossOrder() { return bossOrder; }
+
+    public int getNextBossIndex() { return nextBossIndex; }
 }

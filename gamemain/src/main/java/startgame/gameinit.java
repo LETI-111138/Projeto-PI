@@ -599,7 +599,7 @@ public class gameinit extends ApplicationAdapter {
                             nSwords++;
                             float swordX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
                             float swordY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-                            itemObjects.add(new Coin(new Position(swordX, swordY)));
+                            itemObjects.add(new StaticSword(new Position(swordX, swordY)));
                             posItems.add(new Position(swordX, swordY));
                             System.out.println("Espada " + i + " em: " + (int) swordX + ", " + (int) swordY);
                             break;
@@ -705,6 +705,7 @@ public class gameinit extends ApplicationAdapter {
             }
             break;
             case BOSS:
+                if (currentBoss == null) return;
             Enemy bossKilled = currentBoss;
                 if (mcPos.isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
                     int dano = Mc.getInstance().getatkD();
@@ -720,6 +721,12 @@ public class gameinit extends ApplicationAdapter {
                     damageTexts.add(dt);
                     if (currentBoss.isDead()) {
                         bossKilled = null;
+                            if (roomManager.getNextBossIndex() >= roomManager.getBossOrder().size()){
+                                System.out.println("Boss morto! Parabéns, completaste o jogo!");
+                                Gdx.app.exit();
+                                System.exit(0);
+                            }
+
                     }
                 }
                 if(bossKilled == null) {
