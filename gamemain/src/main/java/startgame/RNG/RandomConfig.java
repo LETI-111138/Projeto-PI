@@ -21,6 +21,4 @@ public final class RandomConfig {
     public static final int TREASURE_ITEMS_N = 15;
     public static final float TREASURE_ITEMS_P = 0.7f;
 
-    public static final int COMBAT_ITEMS_N = 8;
-    public static final float COMBAT_ITEMS_P = 0.3f;
 }

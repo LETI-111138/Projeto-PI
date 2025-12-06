@@ -59,21 +59,17 @@ public class RoomManager {
             }
         }
 
-        if (type == RoomType.COMBAT || type == RoomType.BOSS) {
-            // Poisson: nº inimigos
-            enemies = Math.max(1, Distribuicoes.gerarPoisson(RandomConfig.ENEMIES_LAMBDA));
-            // Binomial: nº itens em sala de combate
-            items = Distribuicoes.gerarBinomial(
-                    RandomConfig.COMBAT_ITEMS_N,
-                    RandomConfig.COMBAT_ITEMS_P
-            );
-        } else if (type == RoomType.TREASURE) {
-            enemies = 0;
-            // Binomial: nº itens em sala tesouro
-            items = Distribuicoes.gerarBinomial(
-                    RandomConfig.TREASURE_ITEMS_N,
-                    RandomConfig.TREASURE_ITEMS_P
-            );
+        switch (type) {
+            case COMBAT:
+               enemies = Distribuicoes.gerarPoisson(5.0f);
+                break;
+            case TREASURE:
+                items = Distribuicoes.gerarBinomial(
+                        RandomConfig.TREASURE_ITEMS_N,
+                        RandomConfig.TREASURE_ITEMS_P
+                );
+                break;
+
         }
 
         // 2 ou 3 portas

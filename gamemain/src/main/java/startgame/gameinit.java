@@ -10,7 +10,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import startgame.Objects.*;
-import startgame.RNG.Distribuicoes;
+import startgame.RNG.*;
 
 import java.util.ArrayList; // Import necessário
 import java.util.Random;
@@ -24,11 +24,12 @@ public class gameinit extends ApplicationAdapter {
     OrthographicCamera camera;
 
     // --- GESTORES DE IMAGENS ---
-    StaticImage gestorEstatico;
-    AnimatedImage gestorAnimado;
+    private StaticImage gestorEstatico;
+    private AnimatedImage gestorAnimado;
 
-    ArrayList <Enemy> enemies;
-
+    private ArrayList <Enemy> enemies;
+    private BossIndex boss = null;
+    private Enemy currentBoss = null;
     // --- EFEITOS DE DANO / HUD ---
     private int lastPlayerHp;
     private float hpDamageTimer = 0f;
@@ -126,6 +127,9 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("darkmage.png", "darkmage", 12, 1, 0.1f);
         animAll.put("darkmage", gestorAnimado.getAnimacao("darkmage"));
 
+        gestorAnimado.criarAnimacao("clownboss-Sheet.png", "bossclown", 8, 1, 0.1f);
+        animAll.put("bossclown", gestorAnimado.getAnimacao("bossclown"));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -133,95 +137,6 @@ public class gameinit extends ApplicationAdapter {
                 " (" + currentRoom.getType() + ") ===");
 
         setupRoom(currentRoom);
-
-
-
-        int qtdInimigos = Distribuicoes.gerarPoisson(5.0);
-
-        System.out.println("=== GERAÇÃO DE NÍVEL ===");
-        System.out.println("Inimigos Gerados (Poisson): " + qtdInimigos);
-
-        // VARIÁVEL ALEATÓRIA UNIFORME
-        // Define ONDE cada inimigo aparece
-        for (int i = 0; i < qtdInimigos; i++) {
-            // Gera X entre 0 e o limite do mundo (com margem de 100px)
-            int n =(int) Distribuicoes.gerarUniforme(0,3);
-
-
-            switch(n) {
-                case 0:
-                float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-                // Gera Y entre 0 e o limite do mundo
-                float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-                Zombie zombie = new Zombie(new Position(posX, posY));
-
-                enemies.add(zombie);
-                System.out.println("Zombie " + i + " em: " + (int) posX + ", " + (int) posY); break;
-                case 1:
-                    float posX2 = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-                    // Gera Y entre 0 e o limite do mundo
-                    float posY2 = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-                    Skeleton skeleton = new Skeleton(new Position(posX2, posY2));
-
-                    enemies.add(skeleton);
-                    System.out.println("Skeleton " + i + " em: " + (int) posX2 + ", " + (int) posY2); break;
-
-                case 2:
-                    float posX3 = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-                    // Gera Y entre 0 e o limite do mundo
-                    float posY3 = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-                    DarkMage darkmage = new DarkMage(new Position(posX3, posY3));
-
-                    enemies.add(darkmage);
-                    System.out.println("Dark Mage " + i + " em: " + (int) posX3 + ", " + (int) posY3); break;
-
-                default:
-                    float posXdefault = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-                    // Gera Y entre 0 e o limite do mundo
-                    float posYdefault = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-                    DarkMage defaulte = new DarkMage(new Position(posXdefault, posYdefault));
-
-                    enemies.add(defaulte);
-                    System.out.println("Dark Mage " + i + " em: " + (int) posXdefault + ", " + (int) posYdefault); break;
-
-            }
-        }
-
-        // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
-        nCoins = Distribuicoes.gerarBinomial(10, 0.5f);
-        System.out.println(nCoins + ": Moedas");
-
-        for (int i = 0; i < nCoins; i++) {
-            // Gera X entre 0 e o limite do mundo (com margem de 100px)
-
-            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-            // Gera Y entre 0 e o limite do mundo
-            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-            itemObjects.add(new Coin(new Position(posX, posY)));
-            posItems.add(new Position(posX, posY));
-            System.out.println("Moeda " + i + " em: " + (int) posX + ", " + (int) posY);
-        }
-
-        // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
-        nSwords = Distribuicoes.gerarBinomial(5, 0.5f);
-        System.out.println(nSwords + ": Espadas");
-
-        for (int i = 0; i < nSwords; i++) {
-            // Gera X entre 0 e o limite do mundo (com margem de 100px)
-
-            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-            // Gera Y entre 0 e o limite do mundo
-            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
-
-            itemObjects.add(new StaticSword(new Position(posX, posY)));
-            posItems.add(new Position(posX, posY));
-            System.out.println("Espada" + i + " em: " + (int) posX + ", " + (int) posY);
-        }
 
         // 3. CONFIGURAR CÂMARA
         camera = new OrthographicCamera();
@@ -335,7 +250,7 @@ public class gameinit extends ApplicationAdapter {
         camera.update();
 
 
-        if(!itemObjects.isEmpty()) {
+        if(!itemObjects.isEmpty() && currentRoom.getType() == RoomType.TREASURE){
             ArrayList<staticAssets> aux = new ArrayList<>();
             for (staticAssets c : itemObjects) {
               if(Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 20)){
@@ -358,13 +273,19 @@ public class gameinit extends ApplicationAdapter {
             }
             itemObjects.removeAll(aux);
         }
+
         // Lógica de spawn de portas depende do tipo de sala
         if (!doorsVisible && currentRoom != null) {
             switch (currentRoom.getType()) {
                 case COMBAT:
-                case BOSS:
                     // Nas salas de combate/boss, portas só aparecem quando não há inimigos
                     if (enemies.isEmpty()) {
+                        spawnDoorsForCurrentRoom();
+                    }
+                        break;
+                case BOSS:
+                    // Nas salas de combate/boss, portas só aparecem quando não há inimigos
+                    if (currentBoss==null){
                         spawnDoorsForCurrentRoom();
                     }
                     break;
@@ -377,7 +298,7 @@ public class gameinit extends ApplicationAdapter {
                     break;
             }
         }
-        // Verificar interação com portas (E)
+        // Interação com portas (Pressionar tecla E ativa a iteração do jogador com portas)
         handleDoorInteraction();
 
 
@@ -391,22 +312,6 @@ public class gameinit extends ApplicationAdapter {
             batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
         }
 
-        // Escolher mapa consoante tipo de sala
-
-//        if (currentRoom != null) {
-//            switch (currentRoom.getType()) {
-//                case TREASURE:
-//                    mapaKey = "mapa2";
-//                    break;
-//                case BOSS:
-//                    mapaKey = "mapa2";
-//                    break;
-//                case COMBAT:
-//                default:
-//                    mapaKey = "mapa1";
-//                    break;
-//            }
-//        }
         if (gestorEstatico.getTexture(mapaKey) != null) {
             batch.draw(gestorEstatico.getTexture(mapaKey), 0, 0);
         }
@@ -420,13 +325,23 @@ public class gameinit extends ApplicationAdapter {
 
 
         // 1.5. Desenhar Itens (Estáticos)
-        drawItems();
 
-        // 2. Desenhar Inimigos
-        drawEnemies();
+
+        // 2. Desenhar elementos das salas conforme o seu tipo
+        switch(currentRoom.getType()){
+            case COMBAT:
+                drawEnemies();
+                break;
+            case TREASURE:
+                drawItems();
+                break;
+            case BOSS:
+                drawBoss();
+                break;
+
+        }
+
         drawDamageTexts();
-
-
 
         // 3. Desenhar Jogador
         if (framePlayer != null) {
@@ -446,13 +361,6 @@ public class gameinit extends ApplicationAdapter {
         drawHUD();
     }
 
-    public static boolean withinbounds(Position position){
-    if(position.getX()<= 2000 && position.getX()>= 0 && position.getY()<= 2000 && position.getY()>= 0){
-        return true;
-    }else{
-        return false;
-    }
-    }
 
     public static float getStateTime(){
         return stateTime;
@@ -511,6 +419,20 @@ public class gameinit extends ApplicationAdapter {
                 }
             }
 
+        }
+    }
+
+    public void drawBoss(){
+        if(currentBoss==null)return;
+        switch(boss) {
+            case BOSSCLOWN:
+            TextureRegion framecb = animAll.get("bossclown").getKeyFrame(stateTime, true);
+            currentBoss.giveF(framecb);
+            currentBoss.move();
+            batch.draw(framecb, (int) currentBoss.getPosition().getX(), (int) currentBoss.getPosition().getY());
+            break;
+            default:
+                break;
         }
     }
 
@@ -602,53 +524,101 @@ public class gameinit extends ApplicationAdapter {
         System.out.println("Itens Gerados: " + qtdItems);
 
         // Inimigos
-        for (int i = 0; i < qtdInimigos; i++) {
-            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+        switch (currentRoom.getType()) {
+            case BOSS:
+                boss = currentRoom.getBoss();
+                switch(boss){
+                    case BOSSCLOWN:
+                        float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                        float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                        currentBoss = new BossClown(new Position (posX, posY));
+                        System.out.println("Boss Clown criado.");
+                        break;
+                    default:
+                        break;
+                }
+                break;
 
-            int tipo = random.nextInt(3); // 0 zombie, 1 skeleton, 2 darkmage
+            case COMBAT:
+                System.out.println("=== GERAÇÃO DE NÍVEL ===");
+                System.out.println("Inimigos Gerados: " + qtdInimigos);
 
-            Enemy enemy;
-            switch (tipo) {
-                case 0:
-                    enemy = new Zombie(new Position(posX, posY));
-                    System.out.println("Zombie " + i + " em: " + (int) posX + ", " + (int) posY);
-                    break;
-                case 1:
-                    enemy = new Skeleton(new Position(posX, posY));
-                    System.out.println("Skeleton " + i + " em: " + (int) posX + ", " + (int) posY);
-                    break;
-                case 2:
-                default:
-                    enemy = new DarkMage(new Position(posX, posY));
-                    System.out.println("Dark Mage " + i + " em: " + (int) posX + ", " + (int) posY);
-                    break;
-            }
+                for (int i = 0; i < qtdInimigos; i++) {
+                    // 1. Gera as coordenadas UMA VEZ para qualquer inimigo
+                    float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                    float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                    Position spawnPos = new Position(posX, posY);
 
-            enemies.add(enemy);
-        }
+                    // 2. Decide qual inimigo que deverá ser criado
+                    int n = (int) Distribuicoes.gerarUniforme(0, 3);
 
-        // Itens: mistura de moedas e espadas (isto respeita a V.A. Binomial do nº de itens)
-        nCoins = 0;
-        nSwords = 0;
-        for (int i = 0; i < qtdItems; i++) {
-            float posX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
-            float posY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                    Enemy enemy = null;
 
-            boolean isSword = random.nextFloat() < 0.3f; // ~30% espadas, resto moedas
-            staticAssets item;
-            if (isSword) {
-                item = new StaticSword(new Position(posX, posY));
-                nSwords++;
-                System.out.println("Espada " + i + " em: " + (int) posX + ", " + (int) posY);
-            } else {
-                item = new Coin(new Position(posX, posY));
-                nCoins++;
-                System.out.println("Moeda " + i + " em: " + (int) posX + ", " + (int) posY);
-            }
+                    switch (n) {
+                        case 0:
+                            enemy = new Zombie(spawnPos);
+                            System.out.println("Zombie " + i + " criado.");
+                            break;
+                        case 1:
+                            enemy = new Skeleton(spawnPos);
+                            System.out.println("Skeleton " + i + " criado.");
+                            break;
+                        case 2:
+                        default:
+                            enemy = new DarkMage(spawnPos);
+                            System.out.println("Dark Mage " + i + " criado.");
+                            break;
+                    }
 
-            itemObjects.add(item);
-            posItems.add(item.getPosition());
+                    if (enemy != null) {
+                        enemies.add(enemy);
+                        System.out.println("Posição: " + (int) posX + ", " + (int) posY);
+                    }
+                }
+                break;
+            case TREASURE:
+                // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
+
+                nCoins = Distribuicoes.gerarBinomial(10, 0.5f);
+                System.out.println(nCoins + ": Moedas");
+
+
+                for (int i = 0; i < qtdItems; i++) {
+                    int randomItems = (int) Distribuicoes.gerarUniforme(0,2);
+                    // Gera X entre 0 e o limite do mundo (com margem de 100px)
+                    switch(randomItems){
+                        case 0:
+                            nCoins++;
+                            float coinX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                            float coinY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                            itemObjects.add(new Coin(new Position(coinX, coinY)));
+                            posItems.add(new Position(coinX, coinY));
+                            System.out.println("Moeda " + i + " em: " + (int) coinX + ", " + (int) coinY);
+                            break;
+                        case 1:
+                            nSwords++;
+                            float swordX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                            float swordY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                            itemObjects.add(new Coin(new Position(swordX, swordY)));
+                            posItems.add(new Position(swordX, swordY));
+                            System.out.println("Espada " + i + " em: " + (int) swordX + ", " + (int) swordY);
+                            break;
+                        case 2:
+                        default:
+                            nCoins++;
+                            float defaultX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                            float defaultY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                            itemObjects.add(new Coin(new Position(defaultX, defaultY)));
+                            posItems.add(new Position(defaultX, defaultY));
+                            System.out.println("Moeda " + i + " em: " + (int) defaultX + ", " + (int) defaultY);
+                            break;
+                    }
+
+
+
+                }
+                break;
+
         }
     }
 
@@ -702,34 +672,61 @@ public class gameinit extends ApplicationAdapter {
     // Ataque do jogador (melee) com SPACE
     private void handlePlayerAttack() {
         if (!Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) return;
-
         Position mcPos = Mc.getInstance().getPosition();
-        ArrayList<Enemy> mortos = new ArrayList<>();
 
-        for (Enemy e : enemies) {
-            if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                int dano = Mc.getInstance().getatkD();
-                e.takeDamage(dano);
-                System.out.println("Acertaste num inimigo! Vida inimigo: " + e.getHealth());
+        switch (currentRoom.getType()) {
+            case COMBAT:
+            ArrayList<Enemy> mortos = new ArrayList<>();
 
-                // Criar texto de dano flutuante
-                DamageText dt = new DamageText(
-                        e.getPosition().getX(),
-                        e.getPosition().getY() + 40,
-                        String.valueOf(dano),
-                        DAMAGE_TEXT_DURATION
-                );
-                damageTexts.add(dt);
+            for (Enemy e : enemies) {
+                if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
+                    int dano = Mc.getInstance().getatkD();
+                    e.takeDamage(dano);
+                    System.out.println("Acertaste num inimigo! Vida inimigo: " + e.getHealth());
 
-                if (e.isDead()) {
-                    mortos.add(e);
+                    // Criar texto de dano flutuante
+                    DamageText dt = new DamageText(
+                            e.getPosition().getX(),
+                            e.getPosition().getY() + 40,
+                            String.valueOf(dano),
+                            DAMAGE_TEXT_DURATION
+                    );
+                    damageTexts.add(dt);
+
+                    if (e.isDead()) {
+                        mortos.add(e);
+                    }
                 }
             }
-        }
 
-        if (!mortos.isEmpty()) {
-            enemies.removeAll(mortos);
-            System.out.println(mortos.size() + " inimigo(s) morto(s).");
+            if (!mortos.isEmpty()) {
+                enemies.removeAll(mortos);
+                System.out.println(mortos.size() + " inimigo(s) morto(s).");
+            }
+            break;
+            case BOSS:
+            Enemy bossKilled = currentBoss;
+                if (mcPos.isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
+                    int dano = Mc.getInstance().getatkD();
+                    currentBoss.takeDamage(dano);
+                    System.out.println("Acertaste no boss! Vida do boss: " + currentBoss.getHealth());
+                    // Criar texto de dano flutuante
+                    DamageText dt = new DamageText(
+                            currentBoss.getPosition().getX(),
+                            currentBoss.getPosition().getY() + 40,
+                            String.valueOf(dano),
+                            DAMAGE_TEXT_DURATION
+                    );
+                    damageTexts.add(dt);
+                    if (currentBoss.isDead()) {
+                        bossKilled = null;
+                    }
+                }
+                if(bossKilled == null) {
+                    currentBoss = null;
+                    System.out.println("Boss morto!");
+                }
+                break;
         }
     }
 
@@ -737,6 +734,8 @@ public class gameinit extends ApplicationAdapter {
     private void handleEnemyContactDamage(float delta) {
         Position mcPos = Mc.getInstance().getPosition();
 
+        switch(currentRoom.getType()){
+            case COMBAT:
         for (Enemy e : enemies) {
             if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), ENEMY_CONTACT_RANGE)) {
                 if (timeSinceLastPlayerHit >= PLAYER_HIT_COOLDOWN) {
@@ -748,28 +747,60 @@ public class gameinit extends ApplicationAdapter {
                 break;
             }
         }
+        break;
+            case BOSS:
+                if (currentBoss == null) return;
+                if (mcPos.isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), ENEMY_CONTACT_RANGE)) {
+                    if (timeSinceLastPlayerHit >= PLAYER_HIT_COOLDOWN) {
+                        Mc.getInstance().takeDamage(currentBoss.getatkD());
+                        timeSinceLastPlayerHit = 0f;
+                        System.out.println("O slime levou dano do boss! Vida atual: " + Mc.getInstance().getHealth());
+                    }
+                }
+                break;
+        }
     }
 
     // NÃO deixar o slime ficar em cima dos inimigos
     private void resolvePlayerEnemyCollision() {
         Position mcPos = Mc.getInstance().getPosition();
 
-        for (Enemy e : enemies) {
-            float dx = mcPos.getX() - e.getPosition().getX();
-            float dy = mcPos.getY() - e.getPosition().getY();
-            float dist = (float) Math.sqrt(dx * dx + dy * dy);
+        switch (currentRoom.getType()) {
+            case COMBAT:
+                for (Enemy e : enemies) {
+                    float dx = mcPos.getX() - e.getPosition().getX();
+                    float dy = mcPos.getY() - e.getPosition().getY();
+                    float dist = (float) Math.sqrt(dx * dx + dy * dy);
 
-            if (dist > 0f && dist < MIN_DISTANCE_BETWEEN_CHARACTERS) {
-                float overlap = MIN_DISTANCE_BETWEEN_CHARACTERS - dist;
+                    if (dist > 0f && dist < MIN_DISTANCE_BETWEEN_CHARACTERS) {
+                        float overlap = MIN_DISTANCE_BETWEEN_CHARACTERS - dist;
 
-                // Direção normalizada
-                float nx = dx / dist;
-                float ny = dy / dist;
+                        // Direção normalizada
+                        float nx = dx / dist;
+                        float ny = dy / dist;
 
-                // Empurrar o slime para fora do inimigo
-                mcPos.setX(mcPos.getX() + nx * overlap);
-                mcPos.setY(mcPos.getY() + ny * overlap);
-            }
+                        // Empurrar o slime para fora do inimigo
+                        mcPos.setX(mcPos.getX() + nx * overlap);
+                        mcPos.setY(mcPos.getY() + ny * overlap);
+                    }
+                }
+                break;
+            case BOSS:
+                if (currentBoss == null) return;
+                float dx = mcPos.getX() - currentBoss.getPosition().getX();
+                float dy = mcPos.getY() - currentBoss.getPosition().getY();
+                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0f && dist < MIN_DISTANCE_BETWEEN_CHARACTERS) {
+                    float overlap = MIN_DISTANCE_BETWEEN_CHARACTERS - dist;
+
+                    // Direção normalizada
+                    float nx = dx / dist;
+                    float ny = dy / dist;
+
+                    // Empurrar o slime para fora do inimigo
+                    mcPos.setX(mcPos.getX() + nx * overlap);
+                    mcPos.setY(mcPos.getY() + ny * overlap);
+                }
         }
     }
 
