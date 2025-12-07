@@ -3,6 +3,8 @@ package startgame;
 public class Position {
     float x;
     float y;
+    float dx_aux = 0f;
+    float dy_aux = 0f;
 
     public Position(float x, float y) {
         this.x = x;
@@ -57,6 +59,8 @@ public class Position {
     public float distanceTo(float targetX, float targetY) {
         float dx = this.x - targetX;
         float dy = this.y - targetY;
+        dx_aux = dx;
+        dy_aux = dy;
         // Teorema de Pitágoras: a^2 + b^2 = c^2
         return (float) Math.sqrt(dx * dx + dy * dy);
     }
@@ -66,6 +70,14 @@ public class Position {
      */
     public boolean isWithinRange(float targetX, float targetY, float range) {
         return distanceTo(targetX, targetY) <= range;
+    }
+
+    public float getLastDx() {
+        return dx_aux;
+    }
+
+    public float getLastDy() {
+        return  dy_aux;
     }
 
 

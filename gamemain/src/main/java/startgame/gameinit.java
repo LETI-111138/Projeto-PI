@@ -149,6 +149,9 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("attackanimationt.png", "attackanimationt", 12, 1, 0.035f);
         animAll.put("attackanimationt", gestorAnimado.getAnimacao("attackanimationt"));
 
+        gestorAnimado.criarAnimacao("ForestTotem.png", "ForestTotem", 8, 1, 0.1f);
+        animAll.put("ForestTotem", gestorAnimado.getAnimacao("ForestTotem"));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -185,6 +188,9 @@ public class gameinit extends ApplicationAdapter {
 
         // NÃO deixar o slime colar nos inimigos (cumpre o que o Guilherme pediu)
         resolvePlayerEnemyCollision();
+
+        // NÃO deixar o slime atravessar o merchant
+        resolvePlayerMerchantCollision();
 
         int currentHp = Mc.getInstance().getHealth();
         if (currentHp < lastPlayerHp) {
@@ -514,6 +520,12 @@ public class gameinit extends ApplicationAdapter {
                 currentBoss.move();
                 batch.draw(framebd, (int) currentBoss.getPosition().getX(), (int) currentBoss.getPosition().getY());
                 break;
+            case FORESTOTEM:
+                TextureRegion frameft = animAll.get("ForestTotem").getKeyFrame(stateTime, true);
+                currentBoss.giveF(frameft);
+                currentBoss.move();
+                batch.draw(frameft, (int) currentBoss.getPosition().getX(), (int) currentBoss.getPosition().getY());
+                break;
             default:
                 break;
         }
@@ -525,6 +537,7 @@ public class gameinit extends ApplicationAdapter {
         batch.begin();
 
         drawIndicators();
+        font.getData().setScale(2.0f);
         if(doorsVisible==true)font.draw(batch, "To enter Door press E", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
         if(currentRoom.getType()== RoomType.TREASURE && doorsVisible == false)font.draw(batch, "Collect all items to go to next room", ((int)(Gdx.graphics.getWidth()) / 2)-130, (int)(Gdx.graphics.getHeight()) / 2);
         //Desenha HUD (Heads-Up Display)
@@ -545,8 +558,8 @@ public class gameinit extends ApplicationAdapter {
             }
 
             // guardar escala antiga
-            float oldScaleX = font.getData().scaleX;
-            float oldScaleY = font.getData().scaleY;
+            float oldScaleX = 2.0f;
+            float oldScaleY = 2.0f;
 
             font.getData().setScale(baseScale + extraScale);
 
@@ -584,7 +597,7 @@ public class gameinit extends ApplicationAdapter {
         }
 
         if (gestorEstatico.getTexture("coin_HUD") != null) {
-            font.draw(batch, "COINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
+            font.draw(batch, "KOINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
             batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
         }
 
@@ -611,7 +624,7 @@ public class gameinit extends ApplicationAdapter {
         float playerY = Mc.getInstance().getPosition().getY();
 
         // --- INDICADORES PARA INIMIGOS (Vermelho) ---
-        batch.setColor(1f, 0f, 0f, 0.7f); // Tint Vermelho com transparência
+        batch.setColor(1f, 0f, 0f, 0.7f); // Tint Vermelho com transparência (0,70f valor maximo é 1), divide valores rgb por 255f ja que os  valores rgb do metodo setColor vão de 0 a 1
         for (Enemy e : enemies) {
             // Ignora se o inimigo já estiver morto (embora a lista enemies deva ter apenas vivos)
             if (e.isDead()) continue;
@@ -620,7 +633,7 @@ public class gameinit extends ApplicationAdapter {
         }
 
         // --- INDICADORES PARA ITENS (Amarelo) ---
-        batch.setColor(1f, 1f, 0f, 0.7f); // Tint Amarelo com transparência
+        batch.setColor(1f, 1f, 0f, 0.7f); // Tint Amarelo com transparência (0,70f valor maximo é 1), divide valores rgb por 255f ja que os  valores rgb do metodo setColor vão de 0 a 1
         for (staticAssets item : itemObjects) {
             // Podes filtrar aqui para não mostrar setas para moedas se forem muitas
             // if (item instanceof Coin) continue;
@@ -631,7 +644,7 @@ public class gameinit extends ApplicationAdapter {
         // --- INDICADORES PARA PORTAS (Ciano) ---
         // Só desenha se as portas estiverem visíveis
         if (doorsVisible) {
-            batch.setColor(0f, 1f, 1f, 0.7f); // Cor Ciano (R=0, G=1, B=1)
+            batch.setColor(0f, 1f, 1f, 0.7f); // Cor Ciano com transparência (0,70f valor maximo é 1), divide valores rgb por 255f ja que os  valores rgb do metodo setColor vão de 0 a 1
             for (Door d : doors) {
                 drawSingleIndicator(arrowTexture, playerX, playerY, d.getPosition().getX(), d.getPosition().getY(), centerX, centerY, radius);
             }
@@ -639,14 +652,19 @@ public class gameinit extends ApplicationAdapter {
 
         // --- INDICADOR PARA BOSS ---
         // Só desenha se as portas estiverem visíveis
-        if (currentBoss!=null) {// Cor Ciano (R=0, G=1, B=1)
-            batch.setColor(1f, 0f, 0f, 0.7f);
+        if (currentBoss!=null) {
+            batch.setColor(128f / 255f, 39f / 255f, 179f / 255f, 0.7f);// Cor Roxa com transparência (0,70f valor maximo é 1), divide valores rgb por 255f ja que os  valores rgb do metodo setColor vão de 0 a 1
             drawSingleIndicator(arrowTexture, playerX, playerY, currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), centerX, centerY, radius);
 
         }
 
+        if (merchant != null) {
+            batch.setColor(62f / 255f, 179f / 255f, 40f / 255f, 0.7f); // Cor Verde com transparência (0,70f valor maximo é 1), divide valores rgb por 255f ja que os  valores rgb do metodo setColor vão de 0 a 1
+            drawSingleIndicator(arrowTexture, playerX, playerY, merchant.getPosition().getX(), merchant.getPosition().getY(), centerX, centerY, radius);
+        }
+
         // Reset da cor do batch para branco (importante para não afetar o resto do HUD)
-        batch.setColor(Color.WHITE);
+        batch.setColor(Color.WHITE); // Cor branca definida por nome e nao valores rgb de setColor
     }
 
     private void drawSingleIndicator(Texture textureIndicator, float pX, float pY, float tX, float tY, float cX, float cY, float radius) {
@@ -713,6 +731,12 @@ public class gameinit extends ApplicationAdapter {
                         System.out.println("Blue Droplet Boss criado.");
                         break;
 
+                    case FORESTOTEM:
+                        float foresttotemX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                        float foresttotemY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                        currentBoss = new ForestTotem(new Position (foresttotemX, foresttotemY));
+                        System.out.println("Forest Totem Boss criado.");
+                        break;
                     default:
                         break;
                 }
@@ -932,7 +956,7 @@ public class gameinit extends ApplicationAdapter {
             if (Mc.getInstance().getBalanceCoins() >= item.price) font.setColor(0, 1, 0, 1);
             else font.setColor(1, 0, 0, 1);
 
-            font.draw(batch, "K" + item.price, itemX, itemY - 40);
+            font.draw(batch, "Koins: " + item.price, itemX, itemY - 40);
             font.setColor(1, 1, 1, 1); // Reset
 
             // Guardar área de clique deste item (para o rato funcionar)
@@ -982,13 +1006,16 @@ public class gameinit extends ApplicationAdapter {
                 System.out.println("=== TRANSIÇÃO PARA SALA ID " + nextRoom.getId() +
                         " (" + nextRoom.getType() + ") ===");
                 currentRoom = nextRoom;
-                int skinroom = (int) Distribuicoes.gerarUniforme(0,2);
+                int skinroom = (int) Distribuicoes.gerarUniforme(0,3);
                 switch(skinroom){
                     case 0:
                         mapaKey = "mapa1";
                         break;
                     case 1:
                         mapaKey = "mapa2";
+                        break;
+                    case 2:
+                        mapaKey = "mapa3";
                         break;
                     default:
                         mapaKey = "mapa1";
@@ -1149,6 +1176,72 @@ public class gameinit extends ApplicationAdapter {
                     mcPos.setX(mcPos.getX() + nx * overlap);
                     mcPos.setY(mcPos.getY() + ny * overlap);
                 }
+        }
+    }
+
+    private void resolvePlayerMerchantCollision() {
+        // Se não houver merchant (não estamos numa loja), não faz nada
+        if (merchant == null) return;
+        float merchantSize = 100f; // Tamanho fixo do mercador
+        float playerSize = 45f;
+        if (animAll.get("player") != null && animAll.get("player").getKeyFrames().length > 0) {
+            playerSize = animAll.get("player").getKeyFrame(0).getRegionWidth();
+        } else {
+            playerSize = 45f;
+        }
+
+        Position mcPos = Mc.getInstance().getPosition();
+        Position merchPos = merchant.getPosition();
+
+
+        //  Definir o raio de colisão (Tamanho do "corpo" dos personagens)
+        // Como o merchant é estático, podemos dar-lhe um raio fixo um pouco maior (ex: 45f)
+        float collisionRadius = playerSize / 2;
+
+        float mcCenterX = mcPos.getX() + collisionRadius;
+        float mcCenterY = mcPos.getY() + collisionRadius;
+
+        float closestX = MathUtils.clamp(mcCenterX, merchPos.getX(), merchPos.getX() + merchantSize);
+        float closestY = MathUtils.clamp(mcCenterY, merchPos.getY(), merchPos.getY() + merchantSize);
+
+        //  Calcular vetor de distância entre o centro do jogador e esse ponto
+        float distanceX = mcCenterX - closestX;
+        float distanceY = mcCenterY - closestY;
+
+        float distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+
+        if (distanceSquared < (collisionRadius * collisionRadius)) {
+
+            float distance = (float) Math.sqrt(distanceSquared);
+            float overlap = collisionRadius - distance;
+
+            // Vetor de direção normalizado (para onde empurrar)
+            float normalX, normalY;
+
+            if (distance > 0) {
+                // Colisão normal (fora ou na borda)
+                normalX = distanceX / distance;
+                normalY = distanceY / distance;
+            } else {
+                // Caso raro: Jogador está exatamente dentro do mercador (distance = 0)
+                // Empurrar para longe do centro do mercador
+                float merchCenterX = merchPos.getX() + merchantSize / 2f;
+                float merchCenterY = merchPos.getY() + merchantSize / 2f;
+                float diffX = mcCenterX - merchCenterX;
+                float diffY = mcCenterY - merchCenterY;
+                float len = (float) Math.sqrt(diffX*diffX + diffY*diffY);
+
+                if (len > 0) {
+                    normalX = diffX / len;
+                    normalY = diffY / len;
+                } else {
+                    normalX = 1; normalY = 0; // Direção arbitrária se estiver no pixel exato do centro
+                }
+            }
+
+            // Aplicar a correção na posição do jogador
+            mcPos.setX(mcPos.getX() + normalX * overlap);
+            mcPos.setY(mcPos.getY() + normalY * overlap);
         }
     }
 

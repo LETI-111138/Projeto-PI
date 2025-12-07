@@ -10,6 +10,7 @@ public class MapsGame extends staticAssets{
         this.putKeys("mapa1");
         this.putKeys("mapvoid");
         this.putKeys("mapa2");
+        this.putKeys("mapa3");
         //Meter restantes de mapas aqui posteriormente
     }
 

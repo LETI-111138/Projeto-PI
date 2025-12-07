@@ -12,7 +12,7 @@ public final class RandomConfig {
     public static final float PROB_STORE_ROOM = 0.30f;    // 10% loja (NOVO)
 
     // Nº total de bosses (para a permutação)
-    public static final int TOTAL_BOSSES = 2;
+    public static final int TOTAL_BOSSES = 3;
 
     // Nº de portas possíveis
     public static final int MIN_DOORS = 2;
