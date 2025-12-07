@@ -56,16 +56,13 @@ public class RoomManager {
             if (nextBossIndex < bossOrder.size()) {
                 boss = bossOrder.get(nextBossIndex++);
             } else {
-                // CORREÇÃO: Se já não houver bosses, converte a sala em COMBATE
                 type = RoomType.COMBAT;
             }
         }
 
-        // O switch agora usa o 'type' atualizado.
-        // Se mudou para COMBAT acima, vai gerar inimigos corretamente.
         switch (type) {
             case COMBAT:
-                enemies = Distribuicoes.gerarPoisson(5.0f);
+                enemies = Distribuicoes.gerarPoisson(RandomConfig.ENEMIES_LAMBDA);
                 break;
             case TREASURE:
                 items = Distribuicoes.gerarBinomial(
@@ -73,9 +70,14 @@ public class RoomManager {
                         RandomConfig.TREASURE_ITEMS_P
                 );
                 break;
+            case STORE:
+                // Na loja não há inimigos, e geramos um nº fixo de itens (ex: 3)
+                enemies = 0;
+                items = RandomConfig.STORE_ITEMS_N;
+                break;
         }
 
-        // 2 ou 3 portas caso próxima sala não seja boss
+        // Gera portas (igual ao anterior)
         for (Room room : nextOptions) {
             if (room.getType() == RoomType.BOSS) {
                 return new Room(id, type, enemies, items, 1, boss);
@@ -84,20 +86,27 @@ public class RoomManager {
         int doors = RandomConfig.MIN_DOORS +
                 random.nextInt(RandomConfig.MAX_DOORS - RandomConfig.MIN_DOORS + 1);
         return new Room(id, type, enemies, items, doors, boss);
-
     }
 
+    // Método que escolhe o tipo de sala aleatoriamente
     private Room generateRoom() {
-        // Binomial com n=1 (Bernoulli) para tipo de sala
         RoomType type = null;
-        if(numberOfRooms<6){
-            int bernoulli = Distribuicoes.gerarBinomial(1, RandomConfig.PROB_TREASURE_ROOM);
-             type = (bernoulli == 1) ? RoomType.TREASURE : RoomType.COMBAT;
-        }else{
-                type = RoomType.BOSS;
-                numberOfRooms = 0;
-        }
 
+        if (numberOfRooms < 6) {
+            // Gera um número entre 0.0 e 1.0
+            float chance = Distribuicoes.gerarUniforme(0, 100) / 100f;
+
+            if (chance < RandomConfig.PROB_STORE_ROOM) {
+                type = RoomType.STORE;
+            } else if (chance < RandomConfig.PROB_TREASURE_ROOM + RandomConfig.PROB_STORE_ROOM) {
+                type = RoomType.TREASURE; // Caiu nos 10% do tesouro
+            } else {
+                type = RoomType.COMBAT; // Restante é combate
+            }
+        } else {
+            type = RoomType.BOSS;
+            numberOfRooms = 0;
+        }
 
         return generateRoom(type);
     }

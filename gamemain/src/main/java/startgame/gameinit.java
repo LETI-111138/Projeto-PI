@@ -16,6 +16,8 @@ import com.badlogic.gdx.graphics.Texture;
 
 import java.util.ArrayList; // Import necessário
 import java.util.Random;
+import com.badlogic.gdx.math.Rectangle; // Importante para detectar clicks
+import com.badlogic.gdx.math.Vector3;
 
 
 import java.util.HashMap;
@@ -37,6 +39,14 @@ public class gameinit extends ApplicationAdapter {
     private float hpDamageTimer = 0f;
     private static final float HP_DAMAGE_FLASH_TIME = 0.25f;
 
+    // --- LOJA ---
+    private boolean isShopOpen = false;
+    private StoreObject merchant;
+    private ArrayList<ShopItem> itemsOnSale;
+
+    // Retângulos para detetar cliques (Botão fechar e Itens)
+    private Rectangle closeButtonBounds;
+    private ArrayList<Rectangle> itemBounds;
 
     private float cameraShakeTimer = 0f;
     private static final float CAMERA_SHAKE_TIME = 0.15f;
@@ -259,30 +269,54 @@ public class gameinit extends ApplicationAdapter {
         camera.update();
 
 
-        if(!itemObjects.isEmpty() && currentRoom.getType() == RoomType.TREASURE){
+        if (!itemObjects.isEmpty()) {
             ArrayList<staticAssets> aux = new ArrayList<>();
+            int price = 0; // Preço padrão
+
+            // Se for LOJA, define um preço (ex: 5 moedas)
+            if (currentRoom.getType() == RoomType.STORE) {
+                price = 5;
+            }
+
             for (staticAssets c : itemObjects) {
-              if(Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 20)){
-                  switch(c.getKey()){
-                      case "coin":
-                        nCoins--;
-                        c.consume(Mc.getInstance());
-                        aux.add(c);
-                      break;
-                      case "staticsword":
-                          nSwords--;
-                          c.consume(Mc.getInstance());
-                          aux.add(c);
-                      break;
-                      default:
-                          c.consume(Mc.getInstance());
-                          aux.add(c);
-                  }
-              }
+                if (Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 40)) {
+
+                    // Lógica de Compra / Pick up
+                    boolean canPickUp = true;
+
+                    if (currentRoom.getType() == RoomType.STORE) {
+                        if (Mc.getInstance().getBalanceCoins() >= price) {
+                            Mc.getInstance().removeBalanceCoins(price); // Paga o item
+                            System.out.println("Item comprado por " + price + " moedas!");
+                        } else {
+                            canPickUp = false; // Não tem dinheiro
+                            // Opcional: Mostrar texto "Sem dinheiro"
+                        }
+                    }
+
+                    if (canPickUp) {
+                        switch (c.getKey()) {
+                            case "coin":
+                                // Moedas no chão não se pagam para apanhar, né?
+                                // Se venderes moedas na loja, cuidado com o loop infinito de dinheiro!
+                                nCoins--;
+                                c.consume(Mc.getInstance());
+                                aux.add(c);
+                                break;
+                            case "staticsword":
+                                nSwords--;
+                                c.consume(Mc.getInstance());
+                                aux.add(c);
+                                break;
+                            default:
+                                c.consume(Mc.getInstance());
+                                aux.add(c);
+                        }
+                    }
+                }
             }
             itemObjects.removeAll(aux);
         }
-
         // Lógica de spawn de portas depende do tipo de sala
         if (!doorsVisible && currentRoom != null) {
             switch (currentRoom.getType()) {
@@ -305,12 +339,15 @@ public class gameinit extends ApplicationAdapter {
                         spawnDoorsForCurrentRoom();
                     }
                     break;
+                case STORE:
+                    spawnDoorsForCurrentRoom();
+                    break;
             }
         }
         // Interação com portas (Pressionar tecla E ativa a iteração do jogador com portas)
         handleDoorInteraction();
 
-
+        updateShopLogic();
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
@@ -331,6 +368,13 @@ public class gameinit extends ApplicationAdapter {
                         (int) d.getPosition().getY());
             }
         }
+        if(doorsVisible && gestorEstatico.getTexture("door") != null && currentRoom.getType() == RoomType.STORE) {
+            for (Door d : doors) {
+                batch.draw(gestorEstatico.getTexture("Basedoor"),
+                        (int) d.getPosition().getX(),
+                        (int) d.getPosition().getY());
+            }
+        }
 
 
         // 1.5. Desenhar Itens (Estáticos)
@@ -341,7 +385,7 @@ public class gameinit extends ApplicationAdapter {
             case COMBAT:
                 drawEnemies();
                 break;
-            case TREASURE:
+            case TREASURE, STORE:
                 drawItems();
                 break;
             case BOSS:
@@ -351,6 +395,18 @@ public class gameinit extends ApplicationAdapter {
         }
 
         drawDamageTexts();
+
+        // DESENHAR O MERCADOR (Se a sala for STORE)
+        if (currentRoom.getType() == RoomType.STORE && merchant != null) {
+            // Usamos a textura do darkmage que está no gestorAnimado, mas como StoreObject herda de StaticAssets
+
+            batch.draw(gestorEstatico.getTexture("StoreObject"), merchant.getPosition().getX(), merchant.getPosition().getY());
+            // Texto "Press E" sobre o mercador se estiver perto
+            if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
+                font.getData().setScale(1.5f);
+                font.draw(batch, "Press E", merchant.getPosition().getX(), merchant.getPosition().getY() + 100);
+            }
+        }
 
         Mc.getInstance().updateAttackTimer(Mc.getInstance().getDelta());
         TextureRegion framea = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
@@ -377,6 +433,7 @@ public class gameinit extends ApplicationAdapter {
         batch.begin();
 
         batch.end();
+        drawShopUI();
         drawHUD();
     }
 
@@ -626,6 +683,8 @@ public class gameinit extends ApplicationAdapter {
         posItems.clear();
         doors.clear();
         doorsVisible = false;
+        merchant = null; // Resetar mercador
+        isShopOpen = false; // Garantir que a loja fecha ao mudar de sala
 
         int qtdInimigos = room.getEnemyCount();
         int qtdItems = room.getItemCount();
@@ -652,6 +711,7 @@ public class gameinit extends ApplicationAdapter {
                         currentBoss = new BlueDroplet(new Position (bluedropletX, bluedropletY));
                         System.out.println("Blue Droplet Boss criado.");
                         break;
+
                     default:
                         break;
                 }
@@ -736,14 +796,155 @@ public class gameinit extends ApplicationAdapter {
 
                 }
                 break;
+            case STORE:
+                System.out.println("=== SALA DE LOJA ===");
+                // Coloca o mercador no meio da sala
+                merchant = new StoreObject(new Position(LARGURA_MUNDO / 2f, ALTURA_MUNDO / 2f));
+
+                // Configurar itens da loja
+                itemsOnSale = new ArrayList<>();
+                itemBounds = new ArrayList<>();
+
+                // Exemplo: Vender 3 Espadas
+                itemsOnSale.add(new ShopItem("Sword of Power", 10, "staticsword"));
+                itemsOnSale.add(new ShopItem("Super Sword", 20, "staticsword"));
+                itemsOnSale.add(new ShopItem("Hyper Sword", 50, "staticsword"));
+
+                // Spawn das portas (para sair da sala)
+                spawnDoorsForCurrentRoom();
+                break;
 
         }
+    }
+
+    private void updateShopLogic() {
+        // 1. Abrir/Fechar com a tecla E
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            if (isShopOpen) {
+                isShopOpen = false; // Fecha se já estiver aberta
+            } else if (merchant != null && merchant.canInteract(Mc.getInstance().getPosition())) {
+                isShopOpen = true;  // Abre se estiver perto do mercador
+            }
+        }
+
+        // Se a loja não estiver aberta, não processa cliques
+        if (!isShopOpen) return;
+
+        // 2. Processar Cliques do Rato
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Converter coordenadas do rato para coordenadas do HUD (Inverter Y)
+            float mouseX = Gdx.input.getX();
+            float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+
+            // Verificar clique no botão fechar (X)
+            if (closeButtonBounds != null && closeButtonBounds.contains(mouseX, mouseY)) {
+                isShopOpen = false;
+                return;
+            }
+
+            // Verificar clique nos itens (Comprar)
+            for (int i = 0; i < itemBounds.size(); i++) {
+                if (itemBounds.get(i).contains(mouseX, mouseY)) {
+                    ShopItem item = itemsOnSale.get(i);
+                    buyItem(item);
+                }
+            }
+        }
+    }
+
+    private void buyItem(ShopItem item) {
+        if (Mc.getInstance().getBalanceCoins() >= item.price) {
+            Mc.getInstance().removeBalanceCoins(item.price);
+
+            // Lógica do efeito do item
+            if (item.textureKey.equals("staticsword")) {
+                Mc.getInstance().addAtkD(10); // Exemplo: Aumenta dano
+            }
+
+            System.out.println("Comprou: " + item.name);
+        } else {
+            System.out.println("Dinheiro insuficiente!");
+        }
+    }
+
+    private void drawShopUI() {
+        if (!isShopOpen) return;
+
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        // --- 1. Fundo da Loja ---
+        float screenW = Gdx.graphics.getWidth();
+        float screenH = Gdx.graphics.getHeight();
+        float windowW = 600;
+        float windowH = 400;
+        float windowX = (screenW - windowW) / 2;
+        float windowY = (screenH - windowH) / 2;
+
+        // Usamos uma textura existente esticada para fazer o fundo (ex: mapvoid ou criar um pixel preto)
+        // Se 'mapvoid' for azul, a janela será azul.
+        if (gestorEstatico.getTexture("mapvoid") != null) {
+            batch.setColor(0.2f, 0.2f, 0.2f, 0.9f); // Escurecer para parecer fundo de UI
+            batch.draw(gestorEstatico.getTexture("mapvoid"), windowX, windowY, windowW, windowH);
+            batch.setColor(Color.WHITE); // Reset cor
+        }
+
+        // --- 2. Título ---
+        font.draw(batch, "MERCHANT SHOP", windowX + 20, windowY + windowH - 20);
+        font.draw(batch, "YOUR COINS: " + Mc.getInstance().getBalanceCoins(), windowX + 20, windowY + windowH - 50);
+
+        // --- 3. Botão Fechar (X) no Canto Superior Direito ---
+        float closeSize = 40;
+        float closeX = windowX + windowW - closeSize - 10;
+        float closeY = windowY + windowH - closeSize - 10;
+
+        // Define a área do botão para o clique (só precisa ser feito uma vez ou quando redimensiona, mas aqui funciona)
+        closeButtonBounds = new Rectangle(closeX, closeY, closeSize, closeSize);
+
+        font.getData().setScale(2);
+        font.setColor(1, 0, 0, 1); // Vermelho
+        font.draw(batch, "X", closeX + 10, closeY + 35);
+        font.setColor(1, 1, 1, 1); // Reset Branco
+        font.getData().setScale(2); // Reset Escala (se alteraste antes)
+
+        // --- 4. Desenhar Itens ---
+        itemBounds.clear(); // Limpar áreas de clique antigas
+        float startItemX = windowX + 50;
+        float startItemY = windowY + windowH - 150;
+
+        for (int i = 0; i < itemsOnSale.size(); i++) {
+            ShopItem item = itemsOnSale.get(i);
+            float itemX = startItemX + (i * 170);
+            float itemY = startItemY;
+
+            // Desenha ícone
+            if (gestorEstatico.getTexture(item.textureKey) != null) {
+                batch.draw(gestorEstatico.getTexture(item.textureKey), itemX, itemY, 64, 64);
+            }
+
+            // Desenha Preço e Nome
+            font.getData().setScale(1.2f);
+            font.draw(batch, item.name, itemX, itemY - 10);
+
+            // Muda a cor do preço (Verde se tiver dinheiro, Vermelho se não)
+            if (Mc.getInstance().getBalanceCoins() >= item.price) font.setColor(0, 1, 0, 1);
+            else font.setColor(1, 0, 0, 1);
+
+            font.draw(batch, "K" + item.price, itemX, itemY - 40);
+            font.setColor(1, 1, 1, 1); // Reset
+
+            // Guardar área de clique deste item (para o rato funcionar)
+            // Define uma caixa à volta do ícone e texto
+            itemBounds.add(new Rectangle(itemX, itemY - 50, 100, 120));
+        }
+
+        batch.end();
     }
 
     private void spawnDoorsForCurrentRoom() {
         doors.clear();
         doorsVisible = true;
-
         int numDoors = currentRoom != null ? currentRoom.getNumberOfDoors() : 2;
 
         float baseX = 700f;

@@ -8,7 +8,8 @@ public final class RandomConfig {
     public static final double ENEMIES_LAMBDA = 5.0;
 
     // Prob próxima sala TESOURO vs COMBATE (Binomial n=1)
-    public static final float PROB_TREASURE_ROOM = 0.30f; // 30% tesouro, 70% combate
+    public static final float PROB_TREASURE_ROOM = 0.10f;
+    public static final float PROB_STORE_ROOM = 0.30f;    // 10% loja (NOVO)
 
     // Nº total de bosses (para a permutação)
     public static final int TOTAL_BOSSES = 2;
@@ -20,6 +21,9 @@ public final class RandomConfig {
     // Parâmetros para itens (Binomial)
     public static final int TREASURE_ITEMS_N = 15;
     public static final float TREASURE_ITEMS_P = 0.7f;
+
+    // Configurações da Loja
+    public static final int STORE_ITEMS_N = 3;
 
     // Configurações de Dano Crítico do Jogador
     public static final float PROB_CRITICO = 0.20f;       // 20% de chance de dar crítico
