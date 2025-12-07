@@ -433,8 +433,9 @@ public class gameinit extends ApplicationAdapter {
         batch.begin();
 
         batch.end();
-        drawShopUI();
+
         drawHUD();
+        drawShopUI();
     }
 
 
@@ -551,9 +552,9 @@ public class gameinit extends ApplicationAdapter {
 
             // posição afinada para ficar alinhado com o texto "Health" da barra
             font.draw(batch,
-                    "HP: " + Mc.getInstance().getHealth(),
-                    140,                                   // um bocado à direita de "Health"
-                    Gdx.graphics.getHeight() - 60);        // mais centrado verticalmente na barra
+                    ": " + Mc.getInstance().getHealth(),
+                    100,                                   // um bocado à direita de "Health"
+                    Gdx.graphics.getHeight() - 42);        // mais centrado verticalmente na barra
 
             // reset da escala e cor para o resto do HUD
             font.getData().setScale(oldScaleX, oldScaleY);
@@ -945,15 +946,25 @@ public class gameinit extends ApplicationAdapter {
     private void spawnDoorsForCurrentRoom() {
         doors.clear();
         doorsVisible = true;
-        int numDoors = currentRoom != null ? currentRoom.getNumberOfDoors() : 2;
+        int numDoors = 1;
+        if(roomManager.getNextOptions().get(0).getType()== RoomType.BOSS){
+             int numDoorsBoss = 1;
+            float baseX = 700f;
+            float spacing = 250f;
+            float y = 350f;
+            Position doorPos = new Position(baseX + 0 * spacing, y);
+            doors.add(new Door(doorPos,0));
+        }else {
+            numDoors = currentRoom != null ? currentRoom.getNumberOfDoors() : 2;
 
-        float baseX = 700f;
-        float spacing = 250f;
-        float y = 350f;
+            float baseX = 700f;
+            float spacing = 250f;
+            float y = 350f;
 
-        for (int i = 0; i < numDoors; i++) {
-            Position doorPos = new Position(baseX + i * spacing, y);
-            doors.add(new Door(doorPos, i));
+            for (int i = 0; i < numDoors; i++) {
+                Position doorPos = new Position(baseX + i * spacing, y);
+                doors.add(new Door(doorPos, i));
+            }
         }
     }
 

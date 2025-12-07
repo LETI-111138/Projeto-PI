@@ -23,7 +23,7 @@ public class Mc extends Character{
     private boolean isAttacking = false;
 
     public Mc(Position position) {
-        super(position, 200, 10);
+        super(position, 200, 100);
         this.putKeys("player");
         balanceCoins = 15;
         velocidade = 80f;
