@@ -78,6 +78,7 @@ public class gameinit extends ApplicationAdapter {
     // Atributos em relação ao número de Itens no jogo e a sua probabilidade de aparecerem na sala
     int nCoins = 0;
     int nSwords = 0;
+    int nChicken = 0;
     public static ArrayList<Position> posItems;
     public static ArrayList<staticAssets> itemObjects;
 
@@ -314,6 +315,11 @@ public class gameinit extends ApplicationAdapter {
                                 c.consume(Mc.getInstance());
                                 aux.add(c);
                                 break;
+                            case "chicken":
+                                nChicken--;
+                                c.consume(Mc.getInstance());
+                                aux.add(c);
+                                break;
                             default:
                                 c.consume(Mc.getInstance());
                                 aux.add(c);
@@ -498,6 +504,9 @@ public class gameinit extends ApplicationAdapter {
                         break;
                     case "staticsword":
                         batch.draw(gestorEstatico.getTexture("staticsword"), (int) c.getPosition().getX(), (int) c.getPosition().getY());
+                        break;
+                    case "chicken":
+                        batch.draw(gestorEstatico.getTexture("chicken"), (int) c.getPosition().getX(), (int) c.getPosition().getY());
                         break;
                 }
             }
@@ -787,7 +796,7 @@ public class gameinit extends ApplicationAdapter {
 
 
                 for (int i = 0; i < qtdItems; i++) {
-                    int randomItems = (int) Distribuicoes.gerarUniforme(0,2);
+                    int randomItems = (int) Distribuicoes.gerarUniforme(0,3);
                     // Gera X entre 0 e o limite do mundo (com margem de 100px)
                     switch(randomItems){
                         case 0:
@@ -807,6 +816,13 @@ public class gameinit extends ApplicationAdapter {
                             System.out.println("Espada " + i + " em: " + (int) swordX + ", " + (int) swordY);
                             break;
                         case 2:
+                            nChicken++;
+                            float chickenX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
+                            float chickenY = Distribuicoes.gerarUniforme(0, ALTURA_MUNDO - 100);
+                            itemObjects.add(new Chicken(new Position(chickenX, chickenY)));
+                            posItems.add(new Position(chickenX, chickenY));
+                            System.out.println("Frango " + i + " em: " + (int) chickenX + ", " + (int) chickenY);
+                            break;
                         default:
                             nCoins++;
                             float defaultX = Distribuicoes.gerarUniforme(0, LARGURA_MUNDO - 100);
