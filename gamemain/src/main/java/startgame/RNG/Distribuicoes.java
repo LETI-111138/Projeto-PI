@@ -43,6 +43,8 @@ public class Distribuicoes {
         return x;
     }
 
+    // V.A. Discreta: Binomial
+    // Numero de itens aleatorios numa sala de tesouro (TREASURE ROOM)
     public static int gerarBinomial(int n, float p) {
         int sucessos = 0;
         for (int i = 0; i < n; i++) {
@@ -52,8 +54,6 @@ public class Distribuicoes {
         }
         return sucessos;
     }
-
-    // Em startgame/RNG/Distribuicoes.java
 
     /**
      * V.A. Contínua: Exponencial

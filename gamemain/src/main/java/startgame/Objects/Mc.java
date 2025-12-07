@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import startgame.AnimatedImage;
 import startgame.Position;
+import startgame.RNG.Distribuicoes;
+import startgame.RNG.RandomConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -75,6 +77,30 @@ public class Mc extends Character{
         if (Gdx.input.isKeyPressed(Input.Keys.W)) this.getPosition().addY (velocidade * delta);
         if (Gdx.input.isKeyPressed(Input.Keys.S)) this.getPosition().rmY (velocidade * delta);
 
+    }
+
+    public int getatkDMc() {
+        if (Distribuicoes.gerarUniforme(0, 1) < RandomConfig.PROB_CRITICO) {
+
+            // --- CÁLCULO DO DANO CRÍTICO (V.A. NORMAL) ---
+
+            // Média: O dobro do ataque base (ex: se atk=10, média=20)
+            float media = this.getatkD() * RandomConfig.CRITICO_MEDIA_MULT;
+
+            // Desvio Padrão: Variação do dano (ex: 5.0)
+            float desvio = RandomConfig.CRITICO_DESVIO;
+
+            // Gerar o dano crítico usando a Distribuição Normal
+            float danoCritico = Distribuicoes.gerarNormal(media, desvio);
+
+            System.out.println("CRITICAL HIT! Dano Gerado (Normal): " + danoCritico);
+
+            // Retorna o valor arredondado (garantindo que é pelo menos o ataque base)
+            return Math.max(this.getatkD(), Math.round(danoCritico));
+        }
+
+        // Ataque normal (sem crítico)
+        return this.getatkD();
     }
 
 }

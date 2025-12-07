@@ -799,7 +799,7 @@ public class gameinit extends ApplicationAdapter {
 
             for (Enemy e : enemies) {
                 if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkD();
+                    int dano = Mc.getInstance().getatkDMc();
                     e.takeDamage(dano);
                     System.out.println("Acertaste num inimigo! Vida inimigo: " + e.getHealth());
 
@@ -828,7 +828,7 @@ public class gameinit extends ApplicationAdapter {
                 Enemy bossKilled = null;
 
                 if (Mc.getInstance().getPosition().isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkD();
+                    int dano = Mc.getInstance().getatkDMc();
                     currentBoss.takeDamage(dano);
                     System.out.println("Acertaste no boss! Vida do boss: " + currentBoss.getHealth());
 

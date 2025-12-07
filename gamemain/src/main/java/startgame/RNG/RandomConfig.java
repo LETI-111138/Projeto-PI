@@ -21,4 +21,9 @@ public final class RandomConfig {
     public static final int TREASURE_ITEMS_N = 15;
     public static final float TREASURE_ITEMS_P = 0.7f;
 
+    // Configurações de Dano Crítico do Jogador
+    public static final float PROB_CRITICO = 0.20f;       // 20% de chance de dar crítico
+    public static final float CRITICO_MEDIA_MULT = 2.0f;  // Dano crítico médio é 2x o dano base
+    public static final float CRITICO_DESVIO = 5.0f;
+
 }
