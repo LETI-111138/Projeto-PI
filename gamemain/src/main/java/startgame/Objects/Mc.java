@@ -25,7 +25,7 @@ public class Mc extends Character{
     public Mc(Position position) {
         super(position, 200, 10);
         this.putKeys("player");
-        balanceCoins = 0;
+        balanceCoins = 15;
         velocidade = 80f;
         delta = Gdx.graphics.getDeltaTime();
     }

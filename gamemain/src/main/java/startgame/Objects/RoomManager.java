@@ -92,7 +92,7 @@ public class RoomManager {
     private Room generateRoom() {
         RoomType type = null;
 
-        if (numberOfRooms < 6) {
+        if (numberOfRooms < 3) {
             // Gera um número entre 0.0 e 1.0
             float chance = Distribuicoes.gerarUniforme(0, 100) / 100f;
 
@@ -113,8 +113,12 @@ public class RoomManager {
 
     private List<Room> generateNextRooms() {
         List<Room> list = new ArrayList<>();
-        int numDoors = currentRoom != null ? currentRoom.getNumberOfDoors() : 2;
-
+        int numDoors = 1;
+        if(numberOfRooms < 2) {
+             numDoors = currentRoom != null ? currentRoom.getNumberOfDoors() : 2;
+        }else{
+             numDoors = 1;
+        }
         for (int i = 0; i < numDoors; i++) {
             list.add(generateRoom());
         }

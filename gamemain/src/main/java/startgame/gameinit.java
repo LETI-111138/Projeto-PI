@@ -404,7 +404,7 @@ public class gameinit extends ApplicationAdapter {
             // Texto "Press E" sobre o mercador se estiver perto
             if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
                 font.getData().setScale(1.5f);
-                font.draw(batch, "Press E", merchant.getPosition().getX(), merchant.getPosition().getY() + 100);
+                font.draw(batch, "Press E", merchant.getPosition().getX()+10, merchant.getPosition().getY() + 120);
             }
         }
 
