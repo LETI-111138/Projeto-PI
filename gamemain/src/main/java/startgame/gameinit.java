@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import startgame.Objects.*;
 import startgame.RNG.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 
 import java.util.ArrayList; // Import necessário
 import java.util.Random;
@@ -57,6 +59,7 @@ public class gameinit extends ApplicationAdapter {
     private Room currentRoom;
     private ArrayList<Door> doors;
     private boolean doorsVisible = false;
+    private int defeatedBosses = 0;
 
     // Variáveis para o Jogador (MC)
     HashMap<String,Animation<TextureRegion>> animAll;
@@ -450,6 +453,7 @@ public class gameinit extends ApplicationAdapter {
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
+        drawIndicators();
         if(doorsVisible==true)font.draw(batch, "To enter Door press E", ((int)(Gdx.graphics.getWidth()) / 2)-150, (int)(Gdx.graphics.getHeight()) / 2);
         if(currentRoom.getType()== RoomType.TREASURE && doorsVisible == false)font.draw(batch, "Collect all items to go to next room", ((int)(Gdx.graphics.getWidth()) / 2)-130, (int)(Gdx.graphics.getHeight()) / 2);
         //Desenha HUD (Heads-Up Display)
@@ -487,6 +491,8 @@ public class gameinit extends ApplicationAdapter {
 
         }
 
+
+
         if (gestorEstatico.getTexture("manabar") != null) {
             // Desenha a healthbar fixa no canto superior esquerdo (X=0, Y=Altura-100)
             batch.draw(gestorEstatico.getTexture("manabar"), 0, Gdx.graphics.getHeight() - 200);
@@ -514,6 +520,90 @@ public class gameinit extends ApplicationAdapter {
         font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 198, Gdx.graphics.getHeight() - 85);
 
         batch.end();
+    }
+
+
+    private void drawIndicators() {
+        // 1. Verificar se a textura da seta existe
+        Texture arrowTexture = gestorEstatico.getTexture("arrow");
+        if (arrowTexture == null) return;
+
+        // Posição central do HUD (onde o jogador "estaria" no centro da câmara)
+        float centerX = Gdx.graphics.getWidth() / 2f;
+        float centerY = Gdx.graphics.getHeight() / 2f;
+
+        // Raio do círculo onde as setas vão ficar (distância do centro)
+        float radius = 250f;
+
+        // Posição real do Jogador no mundo
+        float playerX = Mc.getInstance().getPosition().getX();
+        float playerY = Mc.getInstance().getPosition().getY();
+
+        // --- INDICADORES PARA INIMIGOS (Vermelho) ---
+        batch.setColor(1f, 0f, 0f, 0.7f); // Tint Vermelho com transparência
+        for (Enemy e : enemies) {
+            // Ignora se o inimigo já estiver morto (embora a lista enemies deva ter apenas vivos)
+            if (e.isDead()) continue;
+
+            drawSingleIndicator(arrowTexture, playerX, playerY, e.getPosition().getX(), e.getPosition().getY(), centerX, centerY, radius);
+        }
+
+        // --- INDICADORES PARA ITENS (Amarelo) ---
+        batch.setColor(1f, 1f, 0f, 0.7f); // Tint Amarelo com transparência
+        for (staticAssets item : itemObjects) {
+            // Podes filtrar aqui para não mostrar setas para moedas se forem muitas
+            // if (item instanceof Coin) continue;
+
+            drawSingleIndicator(arrowTexture, playerX, playerY, item.getPosition().getX(), item.getPosition().getY(), centerX, centerY, radius);
+        }
+
+        // --- INDICADORES PARA PORTAS (Ciano) ---
+        // Só desenha se as portas estiverem visíveis
+        if (doorsVisible) {
+            batch.setColor(0f, 1f, 1f, 0.7f); // Cor Ciano (R=0, G=1, B=1)
+            for (Door d : doors) {
+                drawSingleIndicator(arrowTexture, playerX, playerY, d.getPosition().getX(), d.getPosition().getY(), centerX, centerY, radius);
+            }
+        }
+
+        // --- INDICADOR PARA BOSS ---
+        // Só desenha se as portas estiverem visíveis
+        if (currentBoss!=null) {// Cor Ciano (R=0, G=1, B=1)
+            batch.setColor(1f, 0f, 0f, 0.7f);
+            drawSingleIndicator(arrowTexture, playerX, playerY, currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), centerX, centerY, radius);
+
+        }
+
+        // Reset da cor do batch para branco (importante para não afetar o resto do HUD)
+        batch.setColor(Color.WHITE);
+    }
+
+    private void drawSingleIndicator(Texture textureIndicator, float pX, float pY, float tX, float tY, float cX, float cY, float radius) {
+        // Calcular a diferença de posição
+        float diffX = tX - pX;
+        float diffY = tY - pY;
+
+        // Calcular o ângulo em graus
+        float angle = MathUtils.atan2(diffY, diffX) * MathUtils.radiansToDegrees;
+
+        // Calcular a posição da seta no HUD (orbitando o centro)
+        // Usamos MathUtils.cosDeg e sinDeg porque o angle está em graus
+        float arrowX = cX + MathUtils.cosDeg(angle) * radius;
+        float arrowY = cY + MathUtils.cosDeg(angle - 90) * radius; // Pequeno ajuste dependendo da orientação da tua matemática, geralmente cos/sin funciona bem.
+
+        // Correção: Para coordenadas de ecrã padrão:
+        arrowX = cX + MathUtils.cosDeg(angle) * radius;
+        arrowY = cY + MathUtils.sinDeg(angle) * radius;
+
+        float rotation = angle - 45f;
+
+        // Centrar a textura na posição calculada
+        float w = textureIndicator.getWidth();
+        float h = textureIndicator.getHeight();
+        TextureRegion regionTexture = new TextureRegion(textureIndicator);
+        // Desenhar com rotação
+        // batch.draw(textureIndicator, x, y, originX, originY, width, height, scaleX, scaleY, rotation)
+        batch.draw(regionTexture, arrowX - w/2, arrowY - h/2, w/2, h/2, w, h, 1f, 1f, rotation);
     }
 
     // --- Geração de inimigos e itens para uma sala ---
@@ -663,6 +753,7 @@ public class gameinit extends ApplicationAdapter {
         for (Door d : doors) {
             if (mcPos.isWithinRange(d.getPosition().getX(), d.getPosition().getY(), 40f)) {
                 Room nextRoom = roomManager.goToNextRoom(d.getOptionIndex());
+
                 System.out.println("=== TRANSIÇÃO PARA SALA ID " + nextRoom.getId() +
                         " (" + nextRoom.getType() + ") ===");
                 currentRoom = nextRoom;
@@ -721,12 +812,14 @@ public class gameinit extends ApplicationAdapter {
             break;
             case BOSS:
                 if (currentBoss == null) return;
-            Enemy bossKilled = currentBoss;
-                if (mcPos.isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
+                Enemy bossKilled = null;
+
+                if (Mc.getInstance().getPosition().isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
                     int dano = Mc.getInstance().getatkD();
                     currentBoss.takeDamage(dano);
                     System.out.println("Acertaste no boss! Vida do boss: " + currentBoss.getHealth());
-                    // Criar texto de dano flutuante
+
+                    // (Código do texto de dano mantém-se igual...)
                     DamageText dt = new DamageText(
                             currentBoss.getPosition().getX(),
                             currentBoss.getPosition().getY() + 40,
@@ -734,19 +827,27 @@ public class gameinit extends ApplicationAdapter {
                             DAMAGE_TEXT_DURATION
                     );
                     damageTexts.add(dt);
-                    if (currentBoss.isDead()) {
-                        bossKilled = null;
-                            if (roomManager.getNextBossIndex() >= roomManager.getBossOrder().size()){
-                                System.out.println("Boss morto! Parabéns, completaste o jogo!");
-                                Gdx.app.exit();
-                                System.exit(0);
-                            }
 
+                    if (currentBoss.isDead()) {
+                        bossKilled = currentBoss; // Marcar que matámos o boss
+
+                        // --- ALTERAÇÃO AQUI ---
+                        defeatedBosses++; // Incrementa o contador de bosses mortos
+                        System.out.println("Boss derrotado! Total: " + defeatedBosses + "/" + RandomConfig.TOTAL_BOSSES);
+
+                        // Verifica se o número de mortes iguala ou supera o total de bosses
+                        if (defeatedBosses >= RandomConfig.TOTAL_BOSSES){
+                            System.out.println("Último Boss morto! Parabéns, completaste o jogo!");
+                            Gdx.app.exit();
+                            System.exit(0);
+                        }
+                        // ----------------------
                     }
                 }
-                if(bossKilled == null) {
+
+                if(bossKilled != null) { // Se matámos o boss neste frame
                     currentBoss = null;
-                    System.out.println("Boss morto!");
+                    System.out.println("Boss removido da sala!");
                 }
                 break;
         }

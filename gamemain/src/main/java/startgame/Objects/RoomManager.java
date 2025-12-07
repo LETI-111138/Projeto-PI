@@ -37,8 +37,6 @@ public class RoomManager {
             System.out.println(i);
         }
         Distribuicoes.gerarPermutacao(bossOrder);
-
-        // Agora tens uma permutação uniforme validada pelo teu próprio código RNG
     }
 
     private Room generateStartingRoom() {
@@ -57,12 +55,17 @@ public class RoomManager {
         if (type == RoomType.BOSS) {
             if (nextBossIndex < bossOrder.size()) {
                 boss = bossOrder.get(nextBossIndex++);
+            } else {
+                // CORREÇÃO: Se já não houver bosses, converte a sala em COMBATE
+                type = RoomType.COMBAT;
             }
         }
 
+        // O switch agora usa o 'type' atualizado.
+        // Se mudou para COMBAT acima, vai gerar inimigos corretamente.
         switch (type) {
             case COMBAT:
-               enemies = Distribuicoes.gerarPoisson(5.0f);
+                enemies = Distribuicoes.gerarPoisson(5.0f);
                 break;
             case TREASURE:
                 items = Distribuicoes.gerarBinomial(
@@ -70,14 +73,18 @@ public class RoomManager {
                         RandomConfig.TREASURE_ITEMS_P
                 );
                 break;
-
         }
 
-        // 2 ou 3 portas
+        // 2 ou 3 portas caso próxima sala não seja boss
+        for (Room room : nextOptions) {
+            if (room.getType() == RoomType.BOSS) {
+                return new Room(id, type, enemies, items, 1, boss);
+            }
+        }
         int doors = RandomConfig.MIN_DOORS +
                 random.nextInt(RandomConfig.MAX_DOORS - RandomConfig.MIN_DOORS + 1);
-
         return new Room(id, type, enemies, items, doors, boss);
+
     }
 
     private Room generateRoom() {
@@ -87,8 +94,8 @@ public class RoomManager {
             int bernoulli = Distribuicoes.gerarBinomial(1, RandomConfig.PROB_TREASURE_ROOM);
              type = (bernoulli == 1) ? RoomType.TREASURE : RoomType.COMBAT;
         }else{
-             type = RoomType.BOSS;
-             numberOfRooms = 0;
+                type = RoomType.BOSS;
+                numberOfRooms = 0;
         }
 
 
@@ -102,6 +109,7 @@ public class RoomManager {
         for (int i = 0; i < numDoors; i++) {
             list.add(generateRoom());
         }
+
         return list;
     }
 
@@ -110,13 +118,19 @@ public class RoomManager {
             throw new IllegalArgumentException("Invalid room option index: " + optionIndex);
         }
         currentRoom = nextOptions.get(optionIndex);
+
         nextOptions = generateNextRooms();
+
         return currentRoom;
     }
 
     public Room getCurrentRoom() { return currentRoom; }
     public List<Room> getNextOptions() { return nextOptions; }
     public List<BossIndex> getBossOrder() { return bossOrder; }
-
+    public void addMoreRooms(){ numberOfRooms++; }
     public int getNextBossIndex() { return nextBossIndex; }
+
+    public int getNumberOfRooms() {
+        return numberOfRooms;
+    }
 }
