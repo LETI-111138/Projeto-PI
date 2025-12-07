@@ -136,6 +136,9 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("bluedroplet.png", "bluedroplet", 8, 1, 0.1f);
         animAll.put("bluedroplet", gestorAnimado.getAnimacao("bluedroplet"));
 
+        gestorAnimado.criarAnimacao("attackanimationt.png", "attackanimationt", 12, 1, 0.035f);
+        animAll.put("attackanimationt", gestorAnimado.getAnimacao("attackanimationt"));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -205,7 +208,7 @@ public class gameinit extends ApplicationAdapter {
             System.exit(0);
         }
 
-        // --- ATAQUE DO JOGADOR (SPACE) ---
+        // --- ATAQUE DO JOGADOR (Botão esquerdo do mouse) ---
         handlePlayerAttack();
 
         // --- DANO POR CONTACTO COM INIMIGOS ---
@@ -349,8 +352,18 @@ public class gameinit extends ApplicationAdapter {
 
         drawDamageTexts();
 
+        Mc.getInstance().updateAttackTimer(Mc.getInstance().getDelta());
+        TextureRegion framea = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
+        Animation <TextureRegion> attackAnim = animAll.get("attackanimationt");
         // 3. Desenhar Jogador
         if (framePlayer != null) {
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && !Mc.getInstance().isAttacking()){
+                    Mc.getInstance().startAttack();
+            }
+            if(attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()){ Mc.getInstance().stopAttack();
+            }else if(Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())){
+                batch.draw(framea, (int) (Mc.getInstance().getPosition().getX() - 25), (int) (Mc.getInstance().getPosition().getY()+5));
+            }
             batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
         }
 

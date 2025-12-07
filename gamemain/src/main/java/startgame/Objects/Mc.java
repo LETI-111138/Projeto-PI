@@ -17,6 +17,8 @@ public class Mc extends Character{
     private static Mc INSTANCE;
     private float velocidade;
     float delta;
+    private float attackTimer = 0f;
+    private boolean isAttacking = false;
 
     public Mc(Position position) {
         super(position, 200, 10);
@@ -29,6 +31,25 @@ public class Mc extends Character{
     public static Mc getInstance(){
         if(INSTANCE==null)INSTANCE = new Mc(new Position(1000,1000));
         return INSTANCE;
+    }
+
+    public void startGameAttackTimer(){
+        attackTimer = 0f;
+        isAttacking = true;
+    }
+    public void updateAttackTimer(float delta) {
+        if (isAttacking==true) {
+            attackTimer += delta;
+        }
+    }
+    public float getAttackTimer() { return attackTimer; }
+    public void startAttack() { isAttacking = true; }
+
+    public boolean isAttacking() { return isAttacking; }
+
+    public void stopAttack() {
+        isAttacking = false;
+        attackTimer = 0f;
     }
 
     public int getBalanceCoins() {return balanceCoins;}
