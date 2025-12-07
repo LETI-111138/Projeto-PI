@@ -1159,16 +1159,15 @@ public class gameinit extends ApplicationAdapter {
         switch (currentRoom.getType()) {
             case COMBAT:
                 for (Enemy e : enemies) {
-                    float dx = mcPos.getX() - e.getPosition().getX();
-                    float dy = mcPos.getY() - e.getPosition().getY();
-                    float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                    Position posene = new Position(mcPos.getX(),mcPos.getY());
+                    float dist = posene.distanceTo(e.getPosition().getX(),e.getPosition().getY());
 
                     if (dist > 0f && dist < MIN_DISTANCE_BETWEEN_CHARACTERS) {
                         float overlap = MIN_DISTANCE_BETWEEN_CHARACTERS - dist;
 
                         // Direção normalizada
-                        float nx = dx / dist;
-                        float ny = dy / dist;
+                        float nx = posene.getLastDx() / dist;
+                        float ny = posene.getLastDy() / dist;
 
                         // Empurrar o slime para fora do inimigo
                         mcPos.setX(mcPos.getX() + nx * overlap);
@@ -1178,15 +1177,15 @@ public class gameinit extends ApplicationAdapter {
                 break;
             case BOSS:
                 if (currentBoss == null) return;
-                float dx = mcPos.getX() - currentBoss.getPosition().getX();
-                float dy = mcPos.getY() - currentBoss.getPosition().getY();
-                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+
+                Position posbs = new Position(mcPos.getX(), mcPos.getY());
+                float dist = posbs.distanceTo(currentBoss.getPosition().getX(), currentBoss.getPosition().getY());
                 if (dist > 0f && dist < MIN_DISTANCE_BETWEEN_CHARACTERS) {
                     float overlap = MIN_DISTANCE_BETWEEN_CHARACTERS - dist;
 
                     // Direção normalizada
-                    float nx = dx / dist;
-                    float ny = dy / dist;
+                    float nx = posbs.getLastDx() / dist;
+                    float ny = posbs.getLastDy() / dist;
 
                     // Empurrar o slime para fora do inimigo
                     mcPos.setX(mcPos.getX() + nx * overlap);
