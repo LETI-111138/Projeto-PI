@@ -32,13 +32,10 @@ public class Distribuicoes {
      * Gera um número aleatório segundo a Distribuição Uniforme Contínua || V.A Contínua
      */
     public static float gerarUniforme(int min, int max) {
-        // Fórmula: X = min + (max - min) * U
         float x = 0;
-//            do{
                 float p= random.nextFloat();
                 System.out.println(p);
                x =  min + (max - min) * p;
-//            } while (x >= 2000 || x <= 0);
                System.out.println(x);
         return x;
     }

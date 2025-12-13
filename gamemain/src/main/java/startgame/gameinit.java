@@ -59,10 +59,6 @@ public class gameinit extends ApplicationAdapter {
     // --- HUD (INTERFACE) ---
     OrthographicCamera hudCamera;
     com.badlogic.gdx.graphics.g2d.BitmapFont font;
-    /** Estatísticas para mostrar
-     * int vidaJogar = 100;
-     * int pontuacao = 0;
-     * */
 
     // --- SALAS / ROOMS ---
     private RoomManager roomManager;
@@ -790,9 +786,6 @@ public class gameinit extends ApplicationAdapter {
                 break;
             case TREASURE:
                 // Geração do numero de itens no jogo a nivel de probabilidade e nº tentativas por V.A Discreta Binomial
-
-                nCoins = Distribuicoes.gerarBinomial(10, 0.5f);
-                System.out.println(nCoins + ": Moedas");
 
 
                 for (int i = 0; i < qtdItems; i++) {

@@ -5,7 +5,7 @@ import startgame.gameinit;
 
 public class StaticSword extends staticAssets{
 
-    private int x = 10;
+    private int x = 5;
     public StaticSword(Position position){
         super(position, "staticsword");
         this.putKeys("staticsword");

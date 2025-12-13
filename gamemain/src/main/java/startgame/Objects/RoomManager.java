@@ -68,6 +68,8 @@ public class RoomManager {
             case COMBAT:
                 enemies = Distribuicoes.gerarPoisson(RandomConfig.ENEMIES_LAMBDA);
                 break;
+
+                //
             case TREASURE:
                 items = Distribuicoes.gerarBinomial(
                         RandomConfig.TREASURE_ITEMS_N,
