@@ -18,7 +18,6 @@ import com.badlogic.gdx.graphics.Texture;
 import java.util.ArrayList; // Import necessário
 import java.util.Random;
 import com.badlogic.gdx.math.Rectangle; // Importante para detectar clicks
-import com.badlogic.gdx.math.Vector3;
 
 
 import java.util.HashMap;
@@ -48,7 +47,7 @@ public class gameinit extends ApplicationAdapter {
     private BossIndex boss = null;
     private Enemy currentBoss = null;
     // --- EFEITOS DE DANO / HUD ---
-    private int lastPlayerHp;
+    private float lastPlayerHp;
     private float hpDamageTimer = 0f;
     private static final float HP_DAMAGE_FLASH_TIME = 0.25f;
 
@@ -384,10 +383,10 @@ public class gameinit extends ApplicationAdapter {
 
         if (gestorEstatico.getTexture("coin_HUD") != null) {
             font.draw(batch, "KOINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
-            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
+            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 78, Gdx.graphics.getHeight() - 80);
         }
 
-        font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 198, Gdx.graphics.getHeight() - 85);
+        font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 214, Gdx.graphics.getHeight() - 85);
 
         batch.end();
     }
@@ -622,8 +621,8 @@ public class gameinit extends ApplicationAdapter {
 
                 // Exemplo: Vender 3 Espadas
                 itemsOnSale.add(new ShopItem("Coin Multiplier", 5, "coinmultiplier"));
-                itemsOnSale.add(new ShopItem("Sword of Power", 10, "staticsword"));
-                itemsOnSale.add(new ShopItem("Feathers of Light", 15, "feathers"));
+                itemsOnSale.add(new ShopItem("Feathers of Light", 10, "feathers"));
+                itemsOnSale.add(new ShopItem("Sword of Augmentation", 15, "storesword"));
 
                 // Spawn das portas (para sair da sala)
                 spawnDoorsForCurrentRoom();
@@ -675,8 +674,8 @@ public class gameinit extends ApplicationAdapter {
             Mc.getInstance().removeBalanceCoins(item.price);
 
             // Lógica do efeito do item
-            if (item.textureKey.equals("staticsword")) {
-                Mc.getInstance().addAtkD(10); // Exemplo: Aumenta dano
+            if (item.textureKey.equals("storesword")) {
+                Mc.getInstance().addAtkD(Mc.getInstance().getatkDMc()*0.20f);
             }
             if (item.textureKey.equals("coinmultiplier")) {
                 increaseValueOfCoins();
@@ -838,7 +837,7 @@ public class gameinit extends ApplicationAdapter {
 
             for (Enemy e : enemies) {
                 if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkDMc();
+                    float dano = Mc.getInstance().getatkDMc();
                     e.takeDamage(dano);
                     System.out.println("Acertaste num inimigo! Vida inimigo: " + e.getHealth());
 
@@ -867,7 +866,7 @@ public class gameinit extends ApplicationAdapter {
                 Enemy bossKilled = null;
 
                 if (Mc.getInstance().getPosition().isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkDMc();
+                    float dano = Mc.getInstance().getatkDMc();
                     currentBoss.takeDamage(dano);
                     System.out.println("Acertaste no boss! Vida do boss: " + currentBoss.getHealth());
 
@@ -1165,7 +1164,7 @@ public class gameinit extends ApplicationAdapter {
         resolvePlayerMerchantCollision(); // Se tiveres este método implementado
 
         // 3. EFEITOS VISUAIS (Dano e Shake)
-        int currentHp = Mc.getInstance().getHealth();
+        float currentHp = Mc.getInstance().getHealth();
         if (currentHp < lastPlayerHp) {
             hpDamageTimer = HP_DAMAGE_FLASH_TIME;
             cameraShakeTimer = CAMERA_SHAKE_TIME;

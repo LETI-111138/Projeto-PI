@@ -3,16 +3,9 @@ package startgame.Objects;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import startgame.AnimatedImage;
 import startgame.Position;
 import startgame.RNG.Distribuicoes;
 import startgame.RNG.RandomConfig;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
 
 public class Mc extends Character{
 
@@ -100,7 +93,7 @@ public class Mc extends Character{
 
     }
 
-    public int getatkDMc() {
+    public float getatkDMc() {
         if (Distribuicoes.gerarUniforme(0, 1) < RandomConfig.PROB_CRITICO) {
 
             // --- CÁLCULO DO DANO CRÍTICO (V.A. NORMAL) ---
