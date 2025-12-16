@@ -18,7 +18,7 @@ public class Mc extends Character{
 
     private int balanceCoins;
     private static Mc INSTANCE;
-    private float velocidade;
+    private static float velocidade;
     float delta;
     private float attackTimer = 0f;
     private boolean isAttacking = false;
@@ -27,7 +27,7 @@ public class Mc extends Character{
     public Mc(Position position) {
         super(position, 200, 100);
         this.putKeys("player");
-        balanceCoins = 0;
+        balanceCoins = 50;
         velocidade = 80f;
         delta = Gdx.graphics.getDeltaTime();
         mcwalk = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mcwalk.mp3"));
@@ -69,7 +69,9 @@ public class Mc extends Character{
 
     public float getDelta(){return delta;}
 
-    public void setVelocidade(float velocidade) {this.delta = velocidade;}
+    public void setVelocidade(float velocidade) {this.velocidade = velocidade;}
+
+    public void addVelocidade(float add) {velocidade += add;}
 
     public float getVelocidade() {return velocidade;}
 
@@ -121,5 +123,7 @@ public class Mc extends Character{
         // Ataque normal (sem crítico)
         return this.getatkD();
     }
+
+
 
 }

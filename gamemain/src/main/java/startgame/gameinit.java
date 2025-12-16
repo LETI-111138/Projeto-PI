@@ -33,6 +33,8 @@ public class gameinit extends ApplicationAdapter {
     Music themesong = null;
 
 
+    static int valueOfCoins = 1;
+
     //GAME OVER SCREEN
     GameOverScreen gameOverScreen;
     float stateTimeGameOver = 0f;
@@ -129,6 +131,7 @@ public class gameinit extends ApplicationAdapter {
         posItems = new ArrayList<>();
         attackSound = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/slash.mp3"));
         themesong = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mainsong.mp3"));
+        valueOfCoins = 1;
 
         // Inicialização de variáveis relativas ao HUD
         hudCamera = new OrthographicCamera();
@@ -618,9 +621,9 @@ public class gameinit extends ApplicationAdapter {
                 itemBounds = new ArrayList<>();
 
                 // Exemplo: Vender 3 Espadas
+                itemsOnSale.add(new ShopItem("Coin Multiplier", 5, "coinmultiplier"));
                 itemsOnSale.add(new ShopItem("Sword of Power", 10, "staticsword"));
-                itemsOnSale.add(new ShopItem("Super Sword", 20, "staticsword"));
-                itemsOnSale.add(new ShopItem("Hyper Sword", 50, "staticsword"));
+                itemsOnSale.add(new ShopItem("Feathers of Light", 15, "feathers"));
 
                 // Spawn das portas (para sair da sala)
                 spawnDoorsForCurrentRoom();
@@ -628,6 +631,9 @@ public class gameinit extends ApplicationAdapter {
 
         }
     }
+
+    public static  int getValueOfCoins(){return valueOfCoins;}
+    public void increaseValueOfCoins(){valueOfCoins =  valueOfCoins *2;}
 
     private void updateShopLogic() {
         // 1. Abrir/Fechar com a tecla E
@@ -672,6 +678,13 @@ public class gameinit extends ApplicationAdapter {
             if (item.textureKey.equals("staticsword")) {
                 Mc.getInstance().addAtkD(10); // Exemplo: Aumenta dano
             }
+            if (item.textureKey.equals("coinmultiplier")) {
+                increaseValueOfCoins();
+            }
+            if (item.textureKey.equals("feathers")) {
+                Mc.getInstance().addVelocidade(Mc.getInstance().getVelocidade()*0.20f);
+            }
+
 
             System.out.println("Comprou: " + item.name);
         } else {
@@ -1344,6 +1357,8 @@ public class gameinit extends ApplicationAdapter {
         // Posição inicial (ajusta conforme o teu mapa, ex: 200, 200)
         Mc.getInstance().getPosition().setX(1000);
         Mc.getInstance().getPosition().setY(1000);
+        valueOfCoins = 1;
+        Mc.getInstance().setVelocidade(80f);
 
         Mc.getInstance().setatkD(10); // Reset dano base
 
