@@ -12,6 +12,13 @@ public class Chicken extends staticAssets implements Item{
 
     @Override
     public void consume(Mc mc){
-        if(mc.getHealth()<200) Mc.getInstance().setHealth(mc.getHealth()+5);
+
+        if(mc.getHealth()<200){
+            Mc.getInstance().setHealth(mc.getHealth()+5);
+
+            gameinit.rmItem(this.getPosition());
+        }
+        this.consumeSound.setVolume(0.5f);
+        this.consumeSound.play();
     }
 }

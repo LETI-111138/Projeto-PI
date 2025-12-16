@@ -2,6 +2,7 @@ package startgame.Objects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import startgame.AnimatedImage;
@@ -21,13 +22,15 @@ public class Mc extends Character{
     float delta;
     private float attackTimer = 0f;
     private boolean isAttacking = false;
+    Music mcwalk = null;
 
     public Mc(Position position) {
         super(position, 200, 100);
         this.putKeys("player");
-        balanceCoins = 15;
+        balanceCoins = 0;
         velocidade = 80f;
         delta = Gdx.graphics.getDeltaTime();
+        mcwalk = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mcwalk.mp3"));
     }
 
     public static Mc getInstance(){
@@ -72,10 +75,26 @@ public class Mc extends Character{
 
     public void move(){
 
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) this.getPosition().rmX(velocidade * delta);
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) this.getPosition().addX(velocidade * delta);
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) this.getPosition().addY (velocidade * delta);
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) this.getPosition().rmY (velocidade * delta);
+        if (Gdx.input.isKeyPressed(Input.Keys.A)){
+            this.getPosition().rmX(velocidade * delta);
+            mcwalk.setVolume(1f);
+            mcwalk.play();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.D)){
+            this.getPosition().addX(velocidade * delta);
+            mcwalk.setVolume(1f);
+            mcwalk.play();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.W)){
+            this.getPosition().addY (velocidade * delta);
+            mcwalk.setVolume(1f);
+            mcwalk.play();
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.S)){
+            this.getPosition().rmY (velocidade * delta);
+            mcwalk.setVolume(1f);
+            mcwalk.play();
+        }
 
     }
 

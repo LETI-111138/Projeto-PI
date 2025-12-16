@@ -1,5 +1,7 @@
 package startgame.Objects;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import startgame.Position;
 import startgame.StaticImage;
@@ -13,12 +15,14 @@ public class staticAssets extends GameObject implements Item{
     HashMap<String, Texture> txts;
     ArrayList<String> name_txts;
     String key;
+    Music consumeSound;
 
 
     public staticAssets(Position position, String key){
         super(position);
         txts = new HashMap<>();
         name_txts = new ArrayList<>();
+        consumeSound = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/itemsound.mp3"));
         this.key = key;
     }
 

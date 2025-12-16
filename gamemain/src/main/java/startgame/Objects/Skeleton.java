@@ -7,9 +7,6 @@ import startgame.gameinit;
 
 public class Skeleton extends Enemy {
 
-
-
-
     public Skeleton(Position position) {
         super(position, 50, 5, 80);
         this.putKeys("skeleton");

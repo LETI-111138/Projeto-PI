@@ -3,6 +3,7 @@ package startgame;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -26,6 +27,16 @@ public class gameinit extends ApplicationAdapter {
 
     SpriteBatch batch;
     OrthographicCamera camera;
+
+    //SONS
+    Music attackSound = null;
+    Music themesong = null;
+
+
+    //GAME OVER SCREEN
+    GameOverScreen gameOverScreen;
+    float stateTimeGameOver = 0f;
+    float deltaGameOver = 0f;
 
     // --- GESTORES DE IMAGENS ---
     private StaticImage gestorEstatico;
@@ -116,6 +127,8 @@ public class gameinit extends ApplicationAdapter {
         //Logica de VAs
         posicoesInimigos = new ArrayList<>();
         posItems = new ArrayList<>();
+        attackSound = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/slash.mp3"));
+        themesong = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mainsong.mp3"));
 
         // Inicialização de variáveis relativas ao HUD
         hudCamera = new OrthographicCamera();
@@ -157,6 +170,10 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("ForestTotem.png", "ForestTotem", 8, 1, 0.1f);
         animAll.put("ForestTotem", gestorAnimado.getAnimacao("ForestTotem"));
 
+        gestorAnimado.criarAnimacao("gameoverscreen.png", "gameoverscreen", 8, 1, 0.1f);
+        animAll.put("gameoverscreen", gestorAnimado.getAnimacao("gameoverscreen"));
+        gameOverScreen = new GameOverScreen(new Position(0, 0));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -167,7 +184,7 @@ public class gameinit extends ApplicationAdapter {
 
         // 3. CONFIGURAR CÂMARA
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); // Ou Gdx.graphics.getWidth()
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.zoom = 0.5f;
 
 
@@ -183,7 +200,9 @@ public class gameinit extends ApplicationAdapter {
         // Limpar o ecrã
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        themesong.setVolume(0.3f);
+        themesong.play();
+        themesong.setLooping(true);
         float delta = Gdx.graphics.getDeltaTime();
 
         switch (currentState) {
@@ -197,7 +216,10 @@ public class gameinit extends ApplicationAdapter {
                 break;
 
             case GAME_OVER:
-                // Implementar depois
+                Mc.getInstance().setDelta(delta);
+                stateTime += delta;
+                updateGameOverLogic(); // Verifica input (Enter/Esc)
+                drawGameOver();        // Desenha o ecrã vermelho
                 break;
         }
     }
@@ -1084,10 +1106,10 @@ public class gameinit extends ApplicationAdapter {
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
 
-        // Desenhar um fundo escuro (opcional, podes usar o mapvoid)
-        if (gestorEstatico.getTexture("mapvoid") != null) {
+        // Fundo do Menu
+        if (gestorEstatico.getTexture("menuscreen") != null) {
             batch.setColor(0.5f, 0.5f, 0.5f, 1f); // Escurecer
-            batch.draw(gestorEstatico.getTexture("mapvoid"), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.draw(gestorEstatico.getTexture("menuscreen"), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
             batch.setColor(Color.WHITE); // Reset cor
         }
 
@@ -1096,15 +1118,16 @@ public class gameinit extends ApplicationAdapter {
         String title = "LAST BLOB STANDING";
         // Centrar texto (cálculo aproximado)
         float titleW = 400;
-        font.draw(batch, title, (Gdx.graphics.getWidth() - titleW) / 2f - 50, Gdx.graphics.getHeight() / 2f + 100);
+        font.draw(batch, title, ((Gdx.graphics.getWidth() - titleW) / 2f - 50)+20, (Gdx.graphics.getHeight() / 2f + 100)+100);
+        font.draw(batch, "MENU:", ((Gdx.graphics.getWidth() / 2f) - 50)-28, (Gdx.graphics.getHeight() / 2f + 100));
 
         // Instrução para começar
         font.getData().setScale(1.5f);
         String startMsg = "Press ENTER to Start";
-        font.draw(batch, startMsg, (Gdx.graphics.getWidth() / 2f) - 150, Gdx.graphics.getHeight() / 2f);
+        font.draw(batch, startMsg, ((Gdx.graphics.getWidth() / 2f) - 150)+32, Gdx.graphics.getHeight() / 2f);
 
         font.getData().setScale(1.2f);
-        font.draw(batch, "Press ESC to Exit", (Gdx.graphics.getWidth() / 2f) - 130, Gdx.graphics.getHeight() / 2f - 60);
+        font.draw(batch, "Press ESC to Exit", ((Gdx.graphics.getWidth() / 2f) - 130)+42, (Gdx.graphics.getHeight() / 2f - 60)-30);
 
         // Reset da escala da fonte para o jogo não ficar gigante
         font.getData().setScale(2.0f);
@@ -1164,9 +1187,9 @@ public class gameinit extends ApplicationAdapter {
         handleEnemyContactDamage(delta);
 
         if (Mc.getInstance().getHealth() <= 0) {
-            System.out.println("O slime morreu! Fim da run.");
-            // Futuramente podes mudar para currentState = GameState.GAME_OVER;
-            Gdx.app.exit();
+            System.out.println("O slime morreu! Game Over.");
+            currentState = GameState.GAME_OVER; // <--- MUDANÇA AQUI
+            // Gdx.app.exit(); // Remove esta linha
         }
 
         // 6. CÂMARA (Calcula posição baseada no Jogador)
@@ -1297,8 +1320,12 @@ public class gameinit extends ApplicationAdapter {
 
             if (attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()){
                 Mc.getInstance().stopAttack();
+                attackSound.stop();
             } else if (Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())){
+                attackSound.setVolume(0.5f);
+                attackSound.play();
                 batch.draw(frameAttack, (int) (Mc.getInstance().getPosition().getX() - 25), (int) (Mc.getInstance().getPosition().getY()+5));
+
             }
 
             batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
@@ -1310,5 +1337,86 @@ public class gameinit extends ApplicationAdapter {
 
         drawHUD();    // Barras de vida, moedas, etc.
         drawShopUI(); // Se a loja estiver aberta
+    }
+
+    private void resetGame() {
+        Mc.getInstance().setHealth(200);
+        // Posição inicial (ajusta conforme o teu mapa, ex: 200, 200)
+        Mc.getInstance().getPosition().setX(1000);
+        Mc.getInstance().getPosition().setY(1000);
+
+        Mc.getInstance().setatkD(10); // Reset dano base
+
+        // Reset de Inventário (se quiseres que ele perca tudo)
+        Mc.getInstance().setBalanceCoins(0);
+        // Se tiveres métodos para limpar inventário, chama-os aqui
+
+        // 2. Reset das Salas e Inimigos
+        enemies.clear();
+        itemObjects.clear();
+        doors.clear();
+        boss = null;
+        currentBoss = null;
+
+        // Criar um novo gestor de salas para gerar uma dungeon nova
+        roomManager = new RoomManager();
+        currentRoom = roomManager.getCurrentRoom();
+
+        // Configurar a primeira sala
+        setupRoom(currentRoom);
+        setupRoom(currentRoom);
+
+        // 3. Reset de variáveis de controlo
+        stateTime = 0f;
+        hpDamageTimer = 0f;
+        doorsVisible = false;
+
+        System.out.println("Jogo reiniciado com sucesso!");
+    }
+
+    private void updateGameOverLogic() {
+        // ENTER para tentar de novo
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            resetGame(); // Importante: Resetar antes de jogar!
+            currentState = GameState.PLAYING;
+        }
+
+        // ESCAPE para voltar ao Menu Principal
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            resetGame(); // Reset também, para o menu ficar limpo
+            currentState = GameState.MENU;
+        }
+    }
+
+    private void drawGameOver() {
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        // Fundo vermelho escuro/preto para dramatismo
+        if (animAll.get("gameoverscreen") != null && gameOverScreen != null) {
+            TextureRegion framego = animAll.get("gameoverscreen").getKeyFrame(stateTime, true);
+            gameOverScreen.giveF(framego);
+            //batch.setColor(0.3f, 0f, 0f, 1f); // Tint avermelhado
+            batch.draw(framego, (int) gameOverScreen.getPosition().getX(), (int) gameOverScreen.getPosition().getY());
+            batch.setColor(Color.WHITE); // Reset cor
+        }
+
+        // Texto GAME OVER
+        font.getData().setScale(4.0f);
+        font.setColor(Color.RED);
+        String title = "GAME OVER";
+        float w = 350; // largura aproximada
+        font.draw(batch, title, ((Gdx.graphics.getWidth() - w) / 2f)-27, (Gdx.graphics.getHeight() / 2f + 100)+250);
+
+        // Texto de Restart
+        font.getData().setScale(2.0f);
+        font.setColor(Color.WHITE);
+        font.draw(batch, "Press ENTER to Retry", (Gdx.graphics.getWidth() / 2f) - 180, (Gdx.graphics.getHeight() / 2f)+250);
+
+        font.getData().setScale(1.5f);
+        font.draw(batch, "Press ESC for Menu", (Gdx.graphics.getWidth() / 2f) - 140, (Gdx.graphics.getHeight() / 2f - 60)+250);
+
+        batch.end();
     }
 }
