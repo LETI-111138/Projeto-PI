@@ -1185,13 +1185,12 @@ public class gameinit extends ApplicationAdapter {
 
         updateDamageTexts(delta);
 
-        // 4. INPUTS DE SISTEMA (DEBUG E MENU)
+        // 4. INPUTS DE SISTEMA
         if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
             enemies.clear();
             System.out.println("[DEBUG] Todos os inimigos removidos.");
         }
 
-        // --- ALTERAÇÃO IMPORTANTE: ESCAPE VOLTA AO MENU ---
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             currentState = GameState.MENU;
             return; // Pára de executar o resto do frame para não haver bugs visuais
@@ -1210,11 +1209,13 @@ public class gameinit extends ApplicationAdapter {
         // 6. CÂMARA (Calcula posição baseada no Jogador)
         TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
 
+
+
         if (framePlayer != null) {
             // Clamp da posição do jogador
             Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
             Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
-
+            Mc.getInstance().updateTrail(delta, framePlayer);
             // Zoom Controls
             if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
                 camera.zoom -= 1.0f * delta;
@@ -1305,6 +1306,8 @@ public class gameinit extends ApplicationAdapter {
             }
         }
 
+        Mc.getInstance().drawTrail(batch);
+
         // Entidades Específicas da Sala
         switch(currentRoom.getType()){
             case COMBAT: drawEnemies(); break;
@@ -1365,7 +1368,7 @@ public class gameinit extends ApplicationAdapter {
         Mc.getInstance().setatkD(10); // Reset dano base
 
         // Reset de Inventário (se quiseres que ele perca tudo)
-        Mc.getInstance().setBalanceCoins(0);
+        Mc.getInstance().setBalanceCoins(5);
         // Se tiveres métodos para limpar inventário, chama-os aqui
 
         // 2. Reset das Salas e Inimigos

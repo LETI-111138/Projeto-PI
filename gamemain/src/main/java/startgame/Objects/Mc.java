@@ -6,6 +6,11 @@ import com.badlogic.gdx.audio.Music;
 import startgame.Position;
 import startgame.RNG.Distribuicoes;
 import startgame.RNG.RandomConfig;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 
 public class Mc extends Character{
 
@@ -16,6 +21,15 @@ public class Mc extends Character{
     private float attackTimer = 0f;
     private boolean isAttacking = false;
     Music mcwalk = null;
+
+
+    private ArrayList<TrailGhost> trailGhosts = new ArrayList<>();
+    private float trailSpawnTimer = 0f;
+
+    // CONFIGURAÇÃO DE TRAIL
+    private final float TRAIL_LIFETIME = 0.5f;     // Quanto tempo o rasto dura em segundos
+    private final float TRAIL_SPAWN_RATE = 0.05f;
+
 
     // Variáveis do DASH
     private boolean isDashing = false;
@@ -194,6 +208,71 @@ public class Mc extends Character{
         return isDashing;
     }
 
+
+
+
+    public class TrailGhost {
+        public float x, y;
+        public TextureRegion texture;
+        public float lifeTimer;
+
+        public TrailGhost(float x, float y, TextureRegion texture) {
+            this.x = x;
+            this.y = y;
+            this.texture = texture; // Guarda o frame exato da animação naquele momento
+            this.lifeTimer = TRAIL_LIFETIME;
+        }
+    }
+    public void updateTrail(float delta, TextureRegion currentFrame) {
+        // Atualizar ghosttrails existentes
+        Iterator<TrailGhost> iter = trailGhosts.iterator();
+        while (iter.hasNext()) {
+            TrailGhost ghost = iter.next();
+            ghost.lifeTimer -= delta;
+            if (ghost.lifeTimer <= 0) {
+                iter.remove();
+            }
+        }
+
+        // Cria novos ghostrails
+        // Só cria se estiver a andar ou tiver dado um Dash
+        boolean isMoving = (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.A) ||
+                Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.D) ||
+                isDashing);
+
+        if (isMoving && currentFrame != null) {
+            trailSpawnTimer -= delta;
+
+            // Se estiver a dar DASH, cria rasto muito mais rápido (efeito visual melhor)
+            float currentRate = isDashing ? 0.01f : TRAIL_SPAWN_RATE;
+
+            if (trailSpawnTimer <= 0) {
+                trailSpawnTimer = currentRate;
+                // Adiciona novo fantasma na posição atual
+                trailGhosts.add(new TrailGhost(this.getPosition().getX(), this.getPosition().getY(), currentFrame));
+            }
+        }
+    }
+    public void drawTrail(SpriteBatch batch) {
+        for (TrailGhost ghost : trailGhosts) {
+            // Calcular transparência (Alpha) baseado no tempo de vida restante
+            // 1.0 (totalmente visível) -> 0.0 (invisível)
+            float alpha = ghost.lifeTimer / TRAIL_LIFETIME;
+
+            // Se estiver em Dash, podemos dar uma cor azulada/esverdeada ao rasto
+            if (isDashing) {
+                batch.setColor(0.5f, 1f, 1f, alpha * 0.6f); // Ciano com transparência
+            } else {
+                batch.setColor(1f, 1f, 1f, alpha * 0.5f);   // Cor normal, 50% transparente
+            }
+
+            batch.draw(ghost.texture, ghost.x, ghost.y);
+        }
+
+        // IMPORTANTE: Resetar a cor do batch para branco total,
+        // senão o resto do jogo (jogador, inimigos) fica transparente!
+        batch.setColor(1f, 1f, 1f, 1f);
+    }
 
 
 }
