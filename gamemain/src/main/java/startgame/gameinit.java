@@ -1308,7 +1308,7 @@ public class gameinit extends ApplicationAdapter {
 
         Mc.getInstance().drawTrail(batch);
 
-        // Entidades Específicas da Sala
+        // Desenhos específicos de sala
         switch(currentRoom.getType()){
             case COMBAT: drawEnemies(); break;
             case TREASURE, STORE: drawItems(); break;
@@ -1317,7 +1317,6 @@ public class gameinit extends ApplicationAdapter {
 
         drawDamageTexts();
 
-        // Mercador
         if (currentRoom.getType() == RoomType.STORE && merchant != null) {
             batch.draw(gestorEstatico.getTexture("StoreObject"), merchant.getPosition().getX(), merchant.getPosition().getY());
             if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
@@ -1326,7 +1325,7 @@ public class gameinit extends ApplicationAdapter {
             }
         }
 
-        // Jogador e Animação de Ataque
+
         Mc.getInstance().updateAttackTimer(delta);
         TextureRegion frameAttack = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
         Animation<TextureRegion> attackAnim = animAll.get("attackanimationt");
@@ -1351,15 +1350,13 @@ public class gameinit extends ApplicationAdapter {
 
         batch.end();
 
-        // 9. INTERFACE (UI)
 
-        drawHUD();    // Barras de vida, moedas, etc.
-        drawShopUI(); // Se a loja estiver aberta
+        drawHUD();
+        drawShopUI();
     }
 
     private void resetGame() {
         Mc.getInstance().setHealth(200);
-        // Posição inicial (ajusta conforme o teu mapa, ex: 200, 200)
         Mc.getInstance().getPosition().setX(1000);
         Mc.getInstance().getPosition().setY(1000);
         valueOfCoins = 1;
