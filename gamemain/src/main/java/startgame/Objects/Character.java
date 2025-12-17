@@ -11,13 +11,13 @@ import java.util.Map;
 
 public abstract class Character {
 
-    private int health;
-    private int atkD;
+    private float health;
+    private float atkD;
     private Position position;
     private HashMap<String, Animation<TextureRegion>> animSprites;
     private ArrayList<String> animNames;
 
-    public Character(Position position, int health, int atkD) {
+    public Character(Position position, int health, float atkD) {
         this.position = position;
         this.health = health;
         this.atkD = atkD;
@@ -27,23 +27,23 @@ public abstract class Character {
 
     // ---------- ATAQUE / VIDA ----------
 
-    public void setatkD(int x) {
+    public void setatkD(float x) {
         atkD = x;
     }
 
-    public int getatkD() {
+    public float getatkD() {
         return atkD;
     }
 
-    public void addAtkD(int x) {
+    public void addAtkD(float x) {
         atkD += x;
     }
 
-    public void setHealth(int n) {
+    public void setHealth(float n) {
         health = n;
     }
 
-    public int getHealth() {
+    public float getHealth() {
         return health;
     }
 
@@ -67,7 +67,7 @@ public abstract class Character {
         }
 
     }
-    public void takeDamage(int damage) {
+    public void takeDamage(float damage) {
         health -= damage;
         if (health < 0) health = 0;
     }

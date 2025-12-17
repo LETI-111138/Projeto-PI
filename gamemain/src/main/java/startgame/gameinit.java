@@ -3,6 +3,7 @@ package startgame;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -17,7 +18,6 @@ import com.badlogic.gdx.graphics.Texture;
 import java.util.ArrayList; // Import necessário
 import java.util.Random;
 import com.badlogic.gdx.math.Rectangle; // Importante para detectar clicks
-import com.badlogic.gdx.math.Vector3;
 
 
 import java.util.HashMap;
@@ -27,6 +27,18 @@ public class gameinit extends ApplicationAdapter {
     SpriteBatch batch;
     OrthographicCamera camera;
 
+    //SONS
+    Music attackSound = null;
+    Music themesong = null;
+
+
+    static int valueOfCoins = 1;
+
+    //GAME OVER SCREEN
+    GameOverScreen gameOverScreen;
+    float stateTimeGameOver = 0f;
+    float deltaGameOver = 0f;
+
     // --- GESTORES DE IMAGENS ---
     private StaticImage gestorEstatico;
     private AnimatedImage gestorAnimado;
@@ -35,7 +47,7 @@ public class gameinit extends ApplicationAdapter {
     private BossIndex boss = null;
     private Enemy currentBoss = null;
     // --- EFEITOS DE DANO / HUD ---
-    private int lastPlayerHp;
+    private float lastPlayerHp;
     private float hpDamageTimer = 0f;
     private static final float HP_DAMAGE_FLASH_TIME = 0.25f;
 
@@ -98,6 +110,14 @@ public class gameinit extends ApplicationAdapter {
     //Sprite do mapa
     String mapaKey = "mapa1";
 
+    private enum GameState {
+        MENU,
+        PLAYING,
+        GAME_OVER
+    }
+
+    private GameState currentState = GameState.MENU;
+
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -108,6 +128,9 @@ public class gameinit extends ApplicationAdapter {
         //Logica de VAs
         posicoesInimigos = new ArrayList<>();
         posItems = new ArrayList<>();
+        attackSound = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/slash.mp3"));
+        themesong = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mainsong.mp3"));
+        valueOfCoins = 1;
 
         // Inicialização de variáveis relativas ao HUD
         hudCamera = new OrthographicCamera();
@@ -149,6 +172,10 @@ public class gameinit extends ApplicationAdapter {
         gestorAnimado.criarAnimacao("ForestTotem.png", "ForestTotem", 8, 1, 0.1f);
         animAll.put("ForestTotem", gestorAnimado.getAnimacao("ForestTotem"));
 
+        gestorAnimado.criarAnimacao("gameoverscreen.png", "gameoverscreen", 8, 1, 0.1f);
+        animAll.put("gameoverscreen", gestorAnimado.getAnimacao("gameoverscreen"));
+        gameOverScreen = new GameOverScreen(new Position(0, 0));
+
         roomManager = new RoomManager();
         doors = new ArrayList<>();
         currentRoom = roomManager.getCurrentRoom();
@@ -159,7 +186,7 @@ public class gameinit extends ApplicationAdapter {
 
         // 3. CONFIGURAR CÂMARA
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); // Ou Gdx.graphics.getWidth()
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.zoom = 0.5f;
 
 
@@ -172,278 +199,31 @@ public class gameinit extends ApplicationAdapter {
 
     @Override
     public void render() {
+        // Limpar o ecrã
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        themesong.setVolume(0.2f);
+        themesong.play();
+        themesong.setLooping(true);
+        float delta = Gdx.graphics.getDeltaTime();
 
-
-        Mc.getInstance().setDelta(Gdx.graphics.getDeltaTime());
-        stateTime += Mc.getInstance().getDelta();
-        timeSinceLastPlayerHit += Mc.getInstance().getDelta();
-
-        // --- MOVIMENTO ---
-        Mc.getInstance().move();
-
-        // NÃO deixar o slime colar nos inimigos (cumpre o que o Guilherme pediu)
-        resolvePlayerEnemyCollision();
-
-        // NÃO deixar o slime atravessar o merchant
-        resolvePlayerMerchantCollision();
-
-        int currentHp = Mc.getInstance().getHealth();
-        if (currentHp < lastPlayerHp) {
-            // levou dano
-            hpDamageTimer = HP_DAMAGE_FLASH_TIME;
-            cameraShakeTimer = CAMERA_SHAKE_TIME;
-        }
-        lastPlayerHp = currentHp;
-
-        // Atualizar timers de efeitos
-        if (hpDamageTimer > 0f) {
-            hpDamageTimer -= Mc.getInstance().getDelta();
-            if (hpDamageTimer < 0f) hpDamageTimer = 0f;
-        }
-        if (cameraShakeTimer > 0f) {
-            cameraShakeTimer -= Mc.getInstance().getDelta();
-            if (cameraShakeTimer < 0f) cameraShakeTimer = 0f;
-        }
-        // Atualizar textos de dano flutuantes
-        updateDamageTexts(Mc.getInstance().getDelta());
-
-        // DEBUG: limpar inimigos da sala ao carregar K
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
-            enemies.clear();
-            System.out.println("[DEBUG] Todos os inimigos removidos desta sala.");
-        }
-
-
-        if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-            Gdx.app.exit();
-            System.exit(0);
-        }
-
-        // --- ATAQUE DO JOGADOR (Botão esquerdo do mouse) ---
-        handlePlayerAttack();
-
-        // --- DANO POR CONTACTO COM INIMIGOS ---
-        handleEnemyContactDamage(Mc.getInstance().getDelta());
-
-
-        // Se o slime morrer, termina a run
-        if (Mc.getInstance().getHealth() <= 0) {
-            System.out.println("O slime morreu! Fim da run.");
-            Gdx.app.exit();
-        }
-
-
-        // --- OBTER FRAMES ATUAIS ---
-        TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
-
-        // --- CÂMARA ---
-        Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
-        Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
-
-
-
-        // --- CÂMARA ---
-        Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
-        Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
-
-
-
-        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-            camera.zoom -= 1.0f * Mc.getInstance().getDelta(); // Aproximar camera do personagem
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
-            camera.zoom += 1.0f * Mc.getInstance().getDelta(); // Afastar camara do personagem
-        }
-
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
-        camera.position.set(Mc.getInstance().getPosition().getX() + framePlayer.getRegionWidth()/2f, Mc.getInstance().getPosition().getY()  + framePlayer.getRegionHeight()/2f, 0);
-        // Pequeno camera shake quando leva dano
-        if (cameraShakeTimer > 0f) {
-            float t = cameraShakeTimer / CAMERA_SHAKE_TIME;  // 1 → 0
-            float shakeAmount = CAMERA_SHAKE_STRENGTH * t;
-            float offsetX = (random.nextFloat() - 0.5f) * 2f * shakeAmount;
-            float offsetY = (random.nextFloat() - 0.5f) * 2f * shakeAmount;
-            camera.position.x += offsetX;
-            camera.position.y += offsetY;
-        }
-
-        camera.update();
-
-
-        if (!itemObjects.isEmpty()) {
-            ArrayList<staticAssets> aux = new ArrayList<>();
-            int price = 0; // Preço padrão
-
-            // Se for LOJA, define um preço (ex: 5 moedas)
-            if (currentRoom.getType() == RoomType.STORE) {
-                price = 5;
-            }
-
-            for (staticAssets c : itemObjects) {
-                if (Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 40)) {
-
-                    // Lógica de Compra / Pick up
-                    boolean canPickUp = true;
-
-                    if (currentRoom.getType() == RoomType.STORE) {
-                        if (Mc.getInstance().getBalanceCoins() >= price) {
-                            Mc.getInstance().removeBalanceCoins(price); // Paga o item
-                            System.out.println("Item comprado por " + price + " moedas!");
-                        } else {
-                            canPickUp = false; // Não tem dinheiro
-                            // Opcional: Mostrar texto "Sem dinheiro"
-                        }
-                    }
-
-                    if (canPickUp) {
-                        switch (c.getKey()) {
-                            case "coin":
-                                // Moedas no chão não se pagam para apanhar, né?
-                                // Se venderes moedas na loja, cuidado com o loop infinito de dinheiro!
-                                nCoins--;
-                                c.consume(Mc.getInstance());
-                                aux.add(c);
-                                break;
-                            case "staticsword":
-                                nSwords--;
-                                c.consume(Mc.getInstance());
-                                aux.add(c);
-                                break;
-                            case "chicken":
-                                nChicken--;
-                                c.consume(Mc.getInstance());
-                                aux.add(c);
-                                break;
-                            default:
-                                c.consume(Mc.getInstance());
-                                aux.add(c);
-                        }
-                    }
-                }
-            }
-            itemObjects.removeAll(aux);
-        }
-        // Lógica de spawn de portas depende do tipo de sala
-        if (!doorsVisible && currentRoom != null) {
-            switch (currentRoom.getType()) {
-                case COMBAT:
-                    // Nas salas de combate/boss, portas só aparecem quando não há inimigos
-                    if (enemies.isEmpty()) {
-                        spawnDoorsForCurrentRoom();
-                    }
-                        break;
-                case BOSS:
-                    // Nas salas de combate/boss, portas só aparecem quando não há inimigos
-                    if (currentBoss==null){
-                        spawnDoorsForCurrentRoom();
-                    }
-                    break;
-
-                case TREASURE:
-                    // Na sala de tesouro, portas só aparecem quando já não há itens
-                    if (itemObjects.isEmpty()) {
-                        spawnDoorsForCurrentRoom();
-                    }
-                    break;
-                case STORE:
-                    spawnDoorsForCurrentRoom();
-                    break;
-            }
-        }
-        // Interação com portas (Pressionar tecla E ativa a iteração do jogador com portas)
-        handleDoorInteraction();
-
-        updateShopLogic();
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-
-        // 1. Desenhar Fundo (Estático)
-        // Usa o nome do ficheiro sem extensão como chave
-        if (gestorEstatico.getTexture("mapvoid") != null) {
-            batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
-        }
-
-        if (gestorEstatico.getTexture(mapaKey) != null) {
-            batch.draw(gestorEstatico.getTexture(mapaKey), 0, 0);
-        }
-        if (doorsVisible && gestorEstatico.getTexture("Basedoor") != null) {
-            for (Door d : doors) {
-                batch.draw(gestorEstatico.getTexture("Basedoor"),
-                        (int) d.getPosition().getX(),
-                        (int) d.getPosition().getY());
-            }
-        }
-        if(doorsVisible && gestorEstatico.getTexture("door") != null && currentRoom.getType() == RoomType.STORE) {
-            for (Door d : doors) {
-                batch.draw(gestorEstatico.getTexture("Basedoor"),
-                        (int) d.getPosition().getX(),
-                        (int) d.getPosition().getY());
-            }
-        }
-
-
-        // 1.5. Desenhar Itens (Estáticos)
-
-
-        // 2. Desenhar elementos das salas conforme o seu tipo
-        switch(currentRoom.getType()){
-            case COMBAT:
-                drawEnemies();
-                break;
-            case TREASURE, STORE:
-                drawItems();
-                break;
-            case BOSS:
-                drawBoss();
+        switch (currentState) {
+            case MENU:
+                updateMenuLogic();
+                drawMenu();
                 break;
 
+            case PLAYING:
+                executarJogo(delta);
+                break;
+
+            case GAME_OVER:
+                Mc.getInstance().setDelta(delta);
+                stateTime += delta;
+                updateGameOverLogic(); // Verifica input (Enter/Esc)
+                drawGameOver();        // Desenha o ecrã vermelho
+                break;
         }
-
-        drawDamageTexts();
-
-        // DESENHAR O MERCADOR (Se a sala for STORE)
-        if (currentRoom.getType() == RoomType.STORE && merchant != null) {
-            // Usamos a textura do darkmage que está no gestorAnimado, mas como StoreObject herda de StaticAssets
-
-            batch.draw(gestorEstatico.getTexture("StoreObject"), merchant.getPosition().getX(), merchant.getPosition().getY());
-            // Texto "Press E" sobre o mercador se estiver perto
-            if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
-                font.getData().setScale(1.5f);
-                font.draw(batch, "Press E", merchant.getPosition().getX()+10, merchant.getPosition().getY() + 120);
-            }
-        }
-
-        Mc.getInstance().updateAttackTimer(Mc.getInstance().getDelta());
-        TextureRegion framea = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
-        Animation <TextureRegion> attackAnim = animAll.get("attackanimationt");
-        // 3. Desenhar Jogador
-        if (framePlayer != null) {
-            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && !Mc.getInstance().isAttacking()){
-                    Mc.getInstance().startAttack();
-            }
-            if(attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()){ Mc.getInstance().stopAttack();
-            }else if(Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())){
-                batch.draw(framea, (int) (Mc.getInstance().getPosition().getX() - 25), (int) (Mc.getInstance().getPosition().getY()+5));
-            }
-            batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
-        }
-
-
-
-        batch.end();
-
-        //Render para câmera do HUD
-        hudCamera.update();
-        batch.setProjectionMatrix(hudCamera.combined);
-        batch.begin();
-
-        batch.end();
-
-        drawHUD();
-        drawShopUI();
     }
 
 
@@ -603,10 +383,10 @@ public class gameinit extends ApplicationAdapter {
 
         if (gestorEstatico.getTexture("coin_HUD") != null) {
             font.draw(batch, "KOINS: " + Mc.getInstance().getBalanceCoins(), Gdx.graphics.getWidth()- 200, Gdx.graphics.getHeight() - 25);
-            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 80, Gdx.graphics.getHeight() - 80);
+            batch.draw(gestorEstatico.getTexture("coin_HUD"), Gdx.graphics.getWidth()- 78, Gdx.graphics.getHeight() - 80);
         }
 
-        font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 198, Gdx.graphics.getHeight() - 85);
+        font.draw(batch, "DAMAGE: " + Mc.getInstance().getatkD(), Gdx.graphics.getWidth()- 214, Gdx.graphics.getHeight() - 85);
 
         batch.end();
     }
@@ -840,9 +620,9 @@ public class gameinit extends ApplicationAdapter {
                 itemBounds = new ArrayList<>();
 
                 // Exemplo: Vender 3 Espadas
-                itemsOnSale.add(new ShopItem("Sword of Power", 10, "staticsword"));
-                itemsOnSale.add(new ShopItem("Super Sword", 20, "staticsword"));
-                itemsOnSale.add(new ShopItem("Hyper Sword", 50, "staticsword"));
+                itemsOnSale.add(new ShopItem("Coin Multiplier", 5, "coinmultiplier"));
+                itemsOnSale.add(new ShopItem("Feathers of Light", 10, "feathers"));
+                itemsOnSale.add(new ShopItem("Sword of Augmentation", 15, "storesword"));
 
                 // Spawn das portas (para sair da sala)
                 spawnDoorsForCurrentRoom();
@@ -850,6 +630,9 @@ public class gameinit extends ApplicationAdapter {
 
         }
     }
+
+    public static  int getValueOfCoins(){return valueOfCoins;}
+    public void increaseValueOfCoins(){valueOfCoins =  valueOfCoins *2;}
 
     private void updateShopLogic() {
         // 1. Abrir/Fechar com a tecla E
@@ -891,9 +674,16 @@ public class gameinit extends ApplicationAdapter {
             Mc.getInstance().removeBalanceCoins(item.price);
 
             // Lógica do efeito do item
-            if (item.textureKey.equals("staticsword")) {
-                Mc.getInstance().addAtkD(10); // Exemplo: Aumenta dano
+            if (item.textureKey.equals("storesword")) {
+                Mc.getInstance().addAtkD(Mc.getInstance().getatkDMc()*0.20f);
             }
+            if (item.textureKey.equals("coinmultiplier")) {
+                increaseValueOfCoins();
+            }
+            if (item.textureKey.equals("feathers")) {
+                Mc.getInstance().addVelocidade(Mc.getInstance().getVelocidade()*0.20f);
+            }
+
 
             System.out.println("Comprou: " + item.name);
         } else {
@@ -1047,7 +837,7 @@ public class gameinit extends ApplicationAdapter {
 
             for (Enemy e : enemies) {
                 if (mcPos.isWithinRange(e.getPosition().getX(), e.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkDMc();
+                    float dano = Mc.getInstance().getatkDMc();
                     e.takeDamage(dano);
                     System.out.println("Acertaste num inimigo! Vida inimigo: " + e.getHealth());
 
@@ -1076,7 +866,7 @@ public class gameinit extends ApplicationAdapter {
                 Enemy bossKilled = null;
 
                 if (Mc.getInstance().getPosition().isWithinRange(currentBoss.getPosition().getX(), currentBoss.getPosition().getY(), PLAYER_ATTACK_RANGE)) {
-                    int dano = Mc.getInstance().getatkDMc();
+                    float dano = Mc.getInstance().getatkDMc();
                     currentBoss.takeDamage(dano);
                     System.out.println("Acertaste no boss! Vida do boss: " + currentBoss.getHealth());
 
@@ -1117,6 +907,9 @@ public class gameinit extends ApplicationAdapter {
     // Dano por contacto com inimigos
     private void handleEnemyContactDamage(float delta) {
         Position mcPos = Mc.getInstance().getPosition();
+        if (Mc.getInstance().isDashing()) {
+            return;
+        }
 
         switch(currentRoom.getType()){
             case COMBAT:
@@ -1305,5 +1098,342 @@ public class gameinit extends ApplicationAdapter {
             this.text = text;
             this.timeLeft = timeLeft;
         }
+    }
+
+    // --- LÓGICA DO MENU ---
+    private void updateMenuLogic() {
+        // Se carregar ENTER, começa o jogo
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            currentState = GameState.PLAYING;
+            System.out.println("Jogo Iniciado!");
+        }
+
+        // Se carregar ESCAPE no menu, sai do jogo
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            Gdx.app.exit();
+            System.exit(0);
+        }
+    }
+
+    private void drawMenu() {
+        // Usar a câmara do HUD para o menu ficar fixo no ecrã
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        // Fundo do Menu
+        if (gestorEstatico.getTexture("menuscreen") != null) {
+            batch.setColor(0.5f, 0.5f, 0.5f, 1f); // Escurecer
+            batch.draw(gestorEstatico.getTexture("menuscreen"), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            batch.setColor(Color.WHITE); // Reset cor
+        }
+
+        // Título do Jogo
+        font.getData().setScale(3.0f);
+        String title = "LAST BLOB STANDING";
+        // Centrar texto (cálculo aproximado)
+        float titleW = 400;
+        font.draw(batch, title, ((Gdx.graphics.getWidth() - titleW) / 2f - 50)+20, (Gdx.graphics.getHeight() / 2f + 100)+100);
+        font.draw(batch, "MENU:", ((Gdx.graphics.getWidth() / 2f) - 50)-28, (Gdx.graphics.getHeight() / 2f + 100));
+
+        // Instrução para começar
+        font.getData().setScale(1.5f);
+        String startMsg = "Press ENTER to Start";
+        font.draw(batch, startMsg, ((Gdx.graphics.getWidth() / 2f) - 150)+32, Gdx.graphics.getHeight() / 2f);
+
+        font.getData().setScale(1.2f);
+        font.draw(batch, "Press ESC to Exit", ((Gdx.graphics.getWidth() / 2f) - 130)+42, (Gdx.graphics.getHeight() / 2f - 60)-30);
+
+        // Reset da escala da fonte para o jogo não ficar gigante
+        font.getData().setScale(2.0f);
+
+        batch.end();
+    }
+
+    // Este método contém TODA a lógica antiga do teu jogo
+    // Este método substitui TODA a lógica que estava dentro do antigo render()
+    private void executarJogo(float delta) {
+
+        // 1. ATUALIZAR TEMPOS E DELTAS
+        Mc.getInstance().setDelta(delta);
+        stateTime += delta;
+        timeSinceLastPlayerHit += delta;
+
+        // 2. MOVIMENTO E COLISÕES
+        // (Esta é a ÚNICA vez que o move() deve ser chamado por frame)
+        Mc.getInstance().move();
+
+        resolvePlayerEnemyCollision();
+        resolvePlayerMerchantCollision(); // Se tiveres este método implementado
+
+        // 3. EFEITOS VISUAIS (Dano e Shake)
+        float currentHp = Mc.getInstance().getHealth();
+        if (currentHp < lastPlayerHp) {
+            hpDamageTimer = HP_DAMAGE_FLASH_TIME;
+            cameraShakeTimer = CAMERA_SHAKE_TIME;
+        }
+        lastPlayerHp = currentHp;
+
+        if (hpDamageTimer > 0f) {
+            hpDamageTimer -= delta;
+            if (hpDamageTimer < 0f) hpDamageTimer = 0f;
+        }
+        if (cameraShakeTimer > 0f) {
+            cameraShakeTimer -= delta;
+            if (cameraShakeTimer < 0f) cameraShakeTimer = 0f;
+        }
+
+        updateDamageTexts(delta);
+
+        // 4. INPUTS DE SISTEMA
+        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
+            enemies.clear();
+            System.out.println("[DEBUG] Todos os inimigos removidos.");
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            currentState = GameState.MENU;
+            return; // Pára de executar o resto do frame para não haver bugs visuais
+        }
+
+        // 5. COMBATE E MORTE
+        handlePlayerAttack();
+        handleEnemyContactDamage(delta);
+
+        if (Mc.getInstance().getHealth() <= 0) {
+            System.out.println("O slime morreu! Game Over.");
+            currentState = GameState.GAME_OVER; // <--- MUDANÇA AQUI
+            // Gdx.app.exit(); // Remove esta linha
+        }
+
+        // 6. CÂMARA (Calcula posição baseada no Jogador)
+        TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
+
+
+
+        if (framePlayer != null) {
+            // Clamp da posição do jogador
+            Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
+            Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
+            Mc.getInstance().updateTrail(delta, framePlayer);
+            // Zoom Controls
+            if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+                camera.zoom -= 1.0f * delta;
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
+                camera.zoom += 1.0f * delta;
+            }
+            camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
+
+            // Definir posição da câmara
+            camera.position.set(Mc.getInstance().getPosition().getX() + framePlayer.getRegionWidth()/2f, Mc.getInstance().getPosition().getY()  + framePlayer.getRegionHeight()/2f, 0);
+
+            // Aplicar Camera Shake
+            if (cameraShakeTimer > 0f) {
+                float t = cameraShakeTimer / CAMERA_SHAKE_TIME;
+                float shakeAmount = CAMERA_SHAKE_STRENGTH * t;
+                float offsetX = (new java.util.Random().nextFloat() - 0.5f) * 2f * shakeAmount; // Usar random do Java ou MathUtils
+                float offsetY = (new java.util.Random().nextFloat() - 0.5f) * 2f * shakeAmount;
+                camera.position.x += offsetX;
+                camera.position.y += offsetY;
+            }
+            camera.update();
+        }
+
+        // 7. LÓGICA DE ITENS E PORTAS
+        if (!itemObjects.isEmpty()) {
+            ArrayList<staticAssets> aux = new ArrayList<>();
+            int price = (currentRoom.getType() == RoomType.STORE) ? 5 : 0;
+
+            for (staticAssets c : itemObjects) {
+                if (Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 40)) {
+                    boolean canPickUp = true;
+                    if (currentRoom.getType() == RoomType.STORE) {
+                        if (Mc.getInstance().getBalanceCoins() >= price) {
+                            Mc.getInstance().removeBalanceCoins(price);
+                        } else {
+                            canPickUp = false;
+                        }
+                    }
+
+                    if (canPickUp) {
+                        switch (c.getKey()) {
+                            case "coin": nCoins--; break;
+                            case "staticsword": nSwords--; break;
+                            case "chicken": nChicken--; break;
+                        }
+                        c.consume(Mc.getInstance());
+                        aux.add(c);
+                    }
+                }
+            }
+            itemObjects.removeAll(aux);
+        }
+
+        // Lógica para aparecer portas
+        if (!doorsVisible && currentRoom != null) {
+            switch (currentRoom.getType()) {
+                case COMBAT:
+                    if (enemies.isEmpty()) spawnDoorsForCurrentRoom();
+                    break;
+                case BOSS:
+                    if (currentBoss == null) spawnDoorsForCurrentRoom();
+                    break;
+                case TREASURE:
+                    if (itemObjects.isEmpty()) spawnDoorsForCurrentRoom();
+                    break;
+                case STORE:
+                    spawnDoorsForCurrentRoom();
+                    break;
+            }
+        }
+
+        handleDoorInteraction();
+        updateShopLogic();
+
+        // 8. DESENHO (RENDERIZAÇÃO DO JOGO)
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        // Fundo
+        if (gestorEstatico.getTexture("mapvoid") != null) batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
+        if (gestorEstatico.getTexture(mapaKey) != null) batch.draw(gestorEstatico.getTexture(mapaKey), 0, 0);
+
+        // Portas
+        if (doorsVisible && gestorEstatico.getTexture("Basedoor") != null) {
+            for (Door d : doors) {
+                batch.draw(gestorEstatico.getTexture("Basedoor"), (int) d.getPosition().getX(), (int) d.getPosition().getY());
+            }
+        }
+
+        Mc.getInstance().drawTrail(batch);
+
+        // Desenhos específicos de sala
+        switch(currentRoom.getType()){
+            case COMBAT: drawEnemies(); break;
+            case TREASURE, STORE: drawItems(); break;
+            case BOSS: drawBoss(); break;
+        }
+
+        drawDamageTexts();
+
+        if (currentRoom.getType() == RoomType.STORE && merchant != null) {
+            batch.draw(gestorEstatico.getTexture("StoreObject"), merchant.getPosition().getX(), merchant.getPosition().getY());
+            if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
+                font.getData().setScale(1.5f);
+                font.draw(batch, "Press E", merchant.getPosition().getX()+10, merchant.getPosition().getY() + 120);
+            }
+        }
+
+
+        Mc.getInstance().updateAttackTimer(delta);
+        TextureRegion frameAttack = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
+        Animation<TextureRegion> attackAnim = animAll.get("attackanimationt");
+
+        if (framePlayer != null) {
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && !Mc.getInstance().isAttacking()){
+                Mc.getInstance().startAttack();
+            }
+
+            if (attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()){
+                Mc.getInstance().stopAttack();
+                attackSound.stop();
+            } else if (Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())){
+                attackSound.setVolume(0.5f);
+                attackSound.play();
+                batch.draw(frameAttack, (int) (Mc.getInstance().getPosition().getX() - 25), (int) (Mc.getInstance().getPosition().getY()+5));
+
+            }
+
+            batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
+        }
+
+        batch.end();
+
+
+        drawHUD();
+        drawShopUI();
+    }
+
+    private void resetGame() {
+        Mc.getInstance().setHealth(200);
+        Mc.getInstance().getPosition().setX(1000);
+        Mc.getInstance().getPosition().setY(1000);
+        valueOfCoins = 1;
+        Mc.getInstance().setVelocidade(80f);
+
+        Mc.getInstance().setatkD(10); // Reset dano base
+
+        // Reset de Inventário (se quiseres que ele perca tudo)
+        Mc.getInstance().setBalanceCoins(5);
+        // Se tiveres métodos para limpar inventário, chama-os aqui
+
+        // 2. Reset das Salas e Inimigos
+        enemies.clear();
+        itemObjects.clear();
+        doors.clear();
+        boss = null;
+        currentBoss = null;
+
+        // Criar um novo gestor de salas para gerar uma dungeon nova
+        roomManager = new RoomManager();
+        currentRoom = roomManager.getCurrentRoom();
+
+        // Configurar a primeira sala
+        setupRoom(currentRoom);
+        setupRoom(currentRoom);
+
+        // 3. Reset de variáveis de controlo
+        stateTime = 0f;
+        hpDamageTimer = 0f;
+        doorsVisible = false;
+
+        System.out.println("Jogo reiniciado com sucesso!");
+    }
+
+    private void updateGameOverLogic() {
+        // ENTER para tentar de novo
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            resetGame(); // Importante: Resetar antes de jogar!
+            currentState = GameState.PLAYING;
+        }
+
+        // ESCAPE para voltar ao Menu Principal
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            resetGame(); // Reset também, para o menu ficar limpo
+            currentState = GameState.MENU;
+        }
+    }
+
+    private void drawGameOver() {
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        batch.begin();
+
+        // Fundo vermelho escuro/preto para dramatismo
+        if (animAll.get("gameoverscreen") != null && gameOverScreen != null) {
+            TextureRegion framego = animAll.get("gameoverscreen").getKeyFrame(stateTime, true);
+            gameOverScreen.giveF(framego);
+            //batch.setColor(0.3f, 0f, 0f, 1f); // Tint avermelhado
+            batch.draw(framego, (int) gameOverScreen.getPosition().getX(), (int) gameOverScreen.getPosition().getY());
+            batch.setColor(Color.WHITE); // Reset cor
+        }
+
+        // Texto GAME OVER
+        font.getData().setScale(4.0f);
+        font.setColor(Color.RED);
+        String title = "GAME OVER";
+        float w = 350; // largura aproximada
+        font.draw(batch, title, ((Gdx.graphics.getWidth() - w) / 2f)-27, (Gdx.graphics.getHeight() / 2f + 100)+250);
+
+        // Texto de Restart
+        font.getData().setScale(2.0f);
+        font.setColor(Color.WHITE);
+        font.draw(batch, "Press ENTER to Retry", (Gdx.graphics.getWidth() / 2f) - 180, (Gdx.graphics.getHeight() / 2f)+250);
+
+        font.getData().setScale(1.5f);
+        font.draw(batch, "Press ESC for Menu", (Gdx.graphics.getWidth() / 2f) - 140, (Gdx.graphics.getHeight() / 2f - 60)+250);
+
+        batch.end();
     }
 }
