@@ -28,7 +28,7 @@ public class gameinit extends ApplicationAdapter {
     OrthographicCamera camera;
 
     //SONS
-    Music attackSound = null;
+
     Music themesong = null;
 
 
@@ -128,7 +128,7 @@ public class gameinit extends ApplicationAdapter {
         //Logica de VAs
         posicoesInimigos = new ArrayList<>();
         posItems = new ArrayList<>();
-        attackSound = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/slash.mp3"));
+
         themesong = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mainsong.mp3"));
         valueOfCoins = 1;
 
@@ -145,8 +145,14 @@ public class gameinit extends ApplicationAdapter {
 
         damageTexts = new ArrayList<>();
 
-        gestorAnimado.criarAnimacao("mc_pj_pi.png", "player", 6, 1, 0.1f);
-        animAll.put("player", gestorAnimado.getAnimacao("player"));
+        gestorAnimado.criarAnimacao("mc_pj_pi.png", "player_down", 6, 1, 0.1f);
+        animAll.put("player_down", gestorAnimado.getAnimacao("player_down"));
+
+        gestorAnimado.criarAnimacao("mc_pj_pi_behind.png", "player_up", 6, 1, 0.1f);
+        animAll.put("player_up", gestorAnimado.getAnimacao("player_up"));
+
+        gestorAnimado.criarAnimacao("mc_pj_pi_side.png", "player_side", 6, 1, 0.1f);
+        animAll.put("player_side", gestorAnimado.getAnimacao("player_side"));
 
         // Inimigo esqueleto
         gestorAnimado.criarAnimacao("skeleton-Sheet.png", "skeleton", 8, 1, 0.1f);
@@ -1154,19 +1160,23 @@ public class gameinit extends ApplicationAdapter {
     // Este método substitui TODA a lógica que estava dentro do antigo render()
     private void executarJogo(float delta) {
 
-        // 1. ATUALIZAR TEMPOS E DELTAS
+        // =================================================================================
+        // 1. ATUALIZAR TEMPO E FÍSICA
+        // =================================================================================
         Mc.getInstance().setDelta(delta);
         stateTime += delta;
         timeSinceLastPlayerHit += delta;
 
-        // 2. MOVIMENTO E COLISÕES
-        // (Esta é a ÚNICA vez que o move() deve ser chamado por frame)
+        // Movimento (Inclui lógica do DASH e WASD)
         Mc.getInstance().move();
 
+        // Colisões
         resolvePlayerEnemyCollision();
-        resolvePlayerMerchantCollision(); // Se tiveres este método implementado
+        resolvePlayerMerchantCollision();
 
-        // 3. EFEITOS VISUAIS (Dano e Shake)
+        // =================================================================================
+        // 2. TIMERS E EFEITOS VISUAIS (Dano e Shake)
+        // =================================================================================
         float currentHp = Mc.getInstance().getHealth();
         if (currentHp < lastPlayerHp) {
             hpDamageTimer = HP_DAMAGE_FLASH_TIME;
@@ -1174,81 +1184,120 @@ public class gameinit extends ApplicationAdapter {
         }
         lastPlayerHp = currentHp;
 
-        if (hpDamageTimer > 0f) {
-            hpDamageTimer -= delta;
-            if (hpDamageTimer < 0f) hpDamageTimer = 0f;
-        }
-        if (cameraShakeTimer > 0f) {
-            cameraShakeTimer -= delta;
-            if (cameraShakeTimer < 0f) cameraShakeTimer = 0f;
-        }
+        if (hpDamageTimer > 0f) hpDamageTimer = Math.max(0, hpDamageTimer - delta);
+        if (cameraShakeTimer > 0f) cameraShakeTimer = Math.max(0, cameraShakeTimer - delta);
 
         updateDamageTexts(delta);
 
-        // 4. INPUTS DE SISTEMA
+        // =================================================================================
+        // 3. INPUTS DE SISTEMA E MORTE
+        // =================================================================================
         if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
-            enemies.clear();
-            System.out.println("[DEBUG] Todos os inimigos removidos.");
+            enemies.clear(); // Cheat: matar todos
         }
 
+        // Voltar ao Menu
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             currentState = GameState.MENU;
-            return; // Pára de executar o resto do frame para não haver bugs visuais
+            return;
         }
 
-        // 5. COMBATE E MORTE
-        handlePlayerAttack();
-        handleEnemyContactDamage(delta);
-
+        // Verificar Morte -> GAME OVER
         if (Mc.getInstance().getHealth() <= 0) {
             System.out.println("O slime morreu! Game Over.");
-            currentState = GameState.GAME_OVER; // <--- MUDANÇA AQUI
-            // Gdx.app.exit(); // Remove esta linha
+            currentState = GameState.GAME_OVER;
+            // Não fazemos return aqui para deixar desenhar o frame da morte uma última vez,
+            // ou podes fazer return se quiseres corte imediato.
         }
 
-        // 6. CÂMARA (Calcula posição baseada no Jogador)
-        TextureRegion framePlayer = animAll.get("player").getKeyFrame(stateTime, true);
+        // Ataque e Dano de Inimigos
+        handlePlayerAttack();
+        handleEnemyContactDamage(delta); // Nota: O Dash previne dano aqui dentro
 
 
+        // =================================================================================
+        // 4. CALCULAR FRAME E ANIMAÇÃO (Centralizado)
+        // =================================================================================
+        // Precisamos do frame AGORA para calcular o tamanho do jogador para a câmara
+        // e para atualizar o Rasto (Trail).
 
+        String directionKey = Mc.getInstance().getFacingDirection(); // "up", "down", "side"
+        String animKey = "player_" + directionKey; // Ex: "player_down"
+
+        TextureRegion framePlayer = null;
+        if (animAll.containsKey(animKey)) {
+            framePlayer = animAll.get(animKey).getKeyFrame(stateTime, true);
+        }
+
+        // Lógica de FLIP (Espelhar) se for animação de lado
+        if (directionKey.equals("side") && framePlayer != null) {
+            boolean wantLeft = Mc.getInstance().isFacingLeft();
+            boolean isFlipped = framePlayer.isFlipX();
+
+            // Se quero olhar esquerda e não está virado -> vira
+            if (wantLeft && !isFlipped) framePlayer.flip(true, false);
+                // Se quero olhar direita e está virado -> desvira
+            else if (!wantLeft && isFlipped) framePlayer.flip(true, false);
+        }
+
+        // Atualizar o Rasto (Trail)
         if (framePlayer != null) {
-            // Clamp da posição do jogador
-            Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, LARGURA_MUNDO - framePlayer.getRegionWidth()));
-            Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, ALTURA_MUNDO - framePlayer.getRegionHeight()));
             Mc.getInstance().updateTrail(delta, framePlayer);
+        }
+
+
+        // =================================================================================
+        // 5. CÂMARA (Baseada no frame calculado acima)
+        // =================================================================================
+        if (framePlayer != null) {
+            float mapW = LARGURA_MUNDO;
+            float mapH = ALTURA_MUNDO;
+            float pW = framePlayer.getRegionWidth();
+            float pH = framePlayer.getRegionHeight();
+
+            // Clamp: Não deixar o jogador sair do mapa visualmente
+            Mc.getInstance().getPosition().setX(MathUtils.clamp(Mc.getInstance().getPosition().getX(), 0, mapW - pW));
+            Mc.getInstance().getPosition().setY(MathUtils.clamp(Mc.getInstance().getPosition().getY(), 0, mapH - pH));
+
             // Zoom Controls
-            if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-                camera.zoom -= 1.0f * delta;
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) {
-                camera.zoom += 1.0f * delta;
-            }
+            if (Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom -= 1.0f * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.X) && camera.zoom <= 0.50f) camera.zoom += 1.0f * delta;
             camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 5.0f);
 
-            // Definir posição da câmara
-            camera.position.set(Mc.getInstance().getPosition().getX() + framePlayer.getRegionWidth()/2f, Mc.getInstance().getPosition().getY()  + framePlayer.getRegionHeight()/2f, 0);
+            // Centrar câmara no centro do sprite do jogador
+            camera.position.set(
+                    Mc.getInstance().getPosition().getX() + pW / 2f,
+                    Mc.getInstance().getPosition().getY() + pH / 2f,
+                    0
+            );
 
-            // Aplicar Camera Shake
+            // Camera Shake Effect
             if (cameraShakeTimer > 0f) {
                 float t = cameraShakeTimer / CAMERA_SHAKE_TIME;
-                float shakeAmount = CAMERA_SHAKE_STRENGTH * t;
-                float offsetX = (new java.util.Random().nextFloat() - 0.5f) * 2f * shakeAmount; // Usar random do Java ou MathUtils
-                float offsetY = (new java.util.Random().nextFloat() - 0.5f) * 2f * shakeAmount;
-                camera.position.x += offsetX;
-                camera.position.y += offsetY;
+                float shakeStrength = 5.0f * t;
+                camera.position.x += (MathUtils.random() - 0.5f) * shakeStrength;
+                camera.position.y += (MathUtils.random() - 0.5f) * shakeStrength;
             }
+
             camera.update();
         }
 
-        // 7. LÓGICA DE ITENS E PORTAS
+
+        // =================================================================================
+        // 6. LÓGICA DE AMBIENTE (Itens, Portas, Loja)
+        // =================================================================================
+
+        // Itens no chão
         if (!itemObjects.isEmpty()) {
             ArrayList<staticAssets> aux = new ArrayList<>();
-            int price = (currentRoom.getType() == RoomType.STORE) ? 5 : 0;
+            int price = (currentRoom.getType() == RoomType.STORE) ? 5 : 0; // Podes melhorar isto depois para preços variáveis
 
             for (staticAssets c : itemObjects) {
                 if (Mc.getInstance().getPosition().isWithinRange(c.getPosition().getX(), c.getPosition().getY(), 40)) {
                     boolean canPickUp = true;
+                    // Lógica de compra
                     if (currentRoom.getType() == RoomType.STORE) {
+                        // Aqui podes verificar o tipo de objeto para preços diferentes no futuro
                         if (Mc.getInstance().getBalanceCoins() >= price) {
                             Mc.getInstance().removeBalanceCoins(price);
                         } else {
@@ -1270,7 +1319,7 @@ public class gameinit extends ApplicationAdapter {
             itemObjects.removeAll(aux);
         }
 
-        // Lógica para aparecer portas
+        // Aparecer Portas
         if (!doorsVisible && currentRoom != null) {
             switch (currentRoom.getType()) {
                 case COMBAT:
@@ -1291,68 +1340,97 @@ public class gameinit extends ApplicationAdapter {
         handleDoorInteraction();
         updateShopLogic();
 
-        // 8. DESENHO (RENDERIZAÇÃO DO JOGO)
+
+        // =================================================================================
+        // 7. RENDERIZAÇÃO (DESENHO)
+        // =================================================================================
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Fundo
+        // --- Camada 0: Fundo ---
         if (gestorEstatico.getTexture("mapvoid") != null) batch.draw(gestorEstatico.getTexture("mapvoid"), -1000, -1000);
         if (gestorEstatico.getTexture(mapaKey) != null) batch.draw(gestorEstatico.getTexture(mapaKey), 0, 0);
 
-        // Portas
+        // --- Camada 1: Portas e Objetos de Chão ---
         if (doorsVisible && gestorEstatico.getTexture("Basedoor") != null) {
             for (Door d : doors) {
                 batch.draw(gestorEstatico.getTexture("Basedoor"), (int) d.getPosition().getX(), (int) d.getPosition().getY());
             }
         }
 
+        // --- Camada 2: Rasto Fantasma (Atrás do jogador) ---
         Mc.getInstance().drawTrail(batch);
 
-        // Desenhos específicos de sala
+        // --- Camada 3: Entidades (Inimigos, Boss, Itens) ---
         switch(currentRoom.getType()){
             case COMBAT: drawEnemies(); break;
             case TREASURE, STORE: drawItems(); break;
             case BOSS: drawBoss(); break;
         }
 
-        drawDamageTexts();
-
+        // --- Camada 4: Mercador ---
         if (currentRoom.getType() == RoomType.STORE && merchant != null) {
             batch.draw(gestorEstatico.getTexture("StoreObject"), merchant.getPosition().getX(), merchant.getPosition().getY());
             if (merchant.canInteract(Mc.getInstance().getPosition()) && !isShopOpen) {
+                // Desenhar texto de interação (opcional, ou podes mover para o HUD)
                 font.getData().setScale(1.5f);
                 font.draw(batch, "Press E", merchant.getPosition().getX()+10, merchant.getPosition().getY() + 120);
             }
         }
 
-
-        Mc.getInstance().updateAttackTimer(delta);
-        TextureRegion frameAttack = animAll.get("attackanimationt").getKeyFrame(Mc.getInstance().getAttackTimer(), false);
-        Animation<TextureRegion> attackAnim = animAll.get("attackanimationt");
-
+        // --- Camada 5: Jogador ---
         if (framePlayer != null) {
-            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && !Mc.getInstance().isAttacking()){
+            // Animação de Ataque
+            Mc.getInstance().updateAttackTimer(delta);
+
+            Animation<TextureRegion> attackAnim = animAll.get("attackanimationt");
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && !Mc.getInstance().isAttacking()) {
                 Mc.getInstance().startAttack();
             }
 
-            if (attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()){
+            if (attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer()) && Mc.getInstance().isAttacking()) {
                 Mc.getInstance().stopAttack();
-                attackSound.stop();
-            } else if (Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())){
-                attackSound.setVolume(0.5f);
-                attackSound.play();
-                batch.draw(frameAttack, (int) (Mc.getInstance().getPosition().getX() - 25), (int) (Mc.getInstance().getPosition().getY()+5));
+            }else if (Mc.getInstance().isAttacking() && !attackAnim.isAnimationFinished(Mc.getInstance().getAttackTimer())) {
+                TextureRegion frameAttack = attackAnim.getKeyFrame(Mc.getInstance().getAttackTimer(), false);
+                // Ajuste fino da posição do ataque
+                if (Mc.getInstance().getFacingDirection().equals("side")) {
+                    boolean isFlipped = frameAttack.isFlipX();
+                    boolean isFlippedY = frameAttack.isFlipY();
+                    if (Mc.getInstance().isFacingLeft()) {
+                        if (isFlipped) frameAttack.flip(true, false);
+                        if (isFlippedY) frameAttack.flip(false, true);
+                        batch.draw(frameAttack, Mc.getInstance().getAttackDirection().getX(), Mc.getInstance().getAttackDirection().getY());
+                    } else {
+                        if (!isFlipped) frameAttack.flip(true, false);
+                        if (isFlippedY) frameAttack.flip(false, true);
+                        batch.draw(frameAttack, Mc.getInstance().getAttackDirection().getX(), Mc.getInstance().getAttackDirection().getY());
+                    }
+                }else if(Mc.getInstance().getFacingDirection().equals("up")) {
+                    boolean isFlipped = frameAttack.isFlipY();
+                    if(isFlipped) frameAttack.flip(false, true);
+                    batch.draw(frameAttack, Mc.getInstance().getAttackDirection().getX(), Mc.getInstance().getAttackDirection().getY());
+                }else if(Mc.getInstance().getFacingDirection().equals("down")){
+                    boolean isFlipped = frameAttack.isFlipY();
+                    if(!isFlipped) frameAttack.flip(false, true);
+                    batch.draw(frameAttack, Mc.getInstance().getAttackDirection().getX(), Mc.getInstance().getAttackDirection().getY());
+                }
+
+                // Desenha o Jogador (usando o frame calculado no passo 4)
 
             }
-
-            batch.draw(framePlayer, (int)Mc.getInstance().getPosition().getX(), (int)Mc.getInstance().getPosition().getY());
+            batch.draw(framePlayer, (int) Mc.getInstance().getPosition().getX(), (int) Mc.getInstance().getPosition().getY());
         }
+
+        // --- Camada 6: Textos Flutuantes (Dano) ---
+        drawDamageTexts();
 
         batch.end();
 
-
-        drawHUD();
+        // =================================================================================
+        // 8. INTERFACE (HUD e UI)
+        // =================================================================================
         drawShopUI();
+        drawHUD();
     }
 
     private void resetGame() {
