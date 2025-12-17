@@ -202,7 +202,7 @@ public class gameinit extends ApplicationAdapter {
         // Limpar o ecrã
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        themesong.setVolume(0.3f);
+        themesong.setVolume(0.2f);
         themesong.play();
         themesong.setLooping(true);
         float delta = Gdx.graphics.getDeltaTime();
@@ -907,6 +907,9 @@ public class gameinit extends ApplicationAdapter {
     // Dano por contacto com inimigos
     private void handleEnemyContactDamage(float delta) {
         Position mcPos = Mc.getInstance().getPosition();
+        if (Mc.getInstance().isDashing()) {
+            return;
+        }
 
         switch(currentRoom.getType()){
             case COMBAT:

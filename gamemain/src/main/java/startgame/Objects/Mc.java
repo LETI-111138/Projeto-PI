@@ -17,10 +17,25 @@ public class Mc extends Character{
     private boolean isAttacking = false;
     Music mcwalk = null;
 
+    // Variáveis do DASH
+    private boolean isDashing = false;
+    private float dashTimer = 0f;
+    private float dashCooldown = 0f;
+
+    // Configuração
+    private final float DASH_DURATION = 0.2f;
+    private final float DASH_SPEED = 600f;
+    private final float DASH_COOLDOWN_TIME = 1.0f;
+
+    // Direção para onde o dash vai (X e Y)
+    private float dashDirX = 0f;
+    private float dashDirY = 0f;
+
+
     public Mc(Position position) {
-        super(position, 200, 100);
+        super(position, 200, 10);
         this.putKeys("player");
-        balanceCoins = 50;
+        balanceCoins = 5;
         velocidade = 80f;
         delta = Gdx.graphics.getDeltaTime();
         mcwalk = Gdx.audio.newMusic(Gdx.files.internal("assets/Sound/mcwalk.mp3"));
@@ -68,29 +83,79 @@ public class Mc extends Character{
 
     public float getVelocidade() {return velocidade;}
 
-    public void move(){
-
-        if (Gdx.input.isKeyPressed(Input.Keys.A)){
-            this.getPosition().rmX(velocidade * delta);
-            mcwalk.setVolume(1f);
-            mcwalk.play();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)){
-            this.getPosition().addX(velocidade * delta);
-            mcwalk.setVolume(1f);
-            mcwalk.play();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.W)){
-            this.getPosition().addY (velocidade * delta);
-            mcwalk.setVolume(1f);
-            mcwalk.play();
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)){
-            this.getPosition().rmY (velocidade * delta);
-            mcwalk.setVolume(1f);
-            mcwalk.play();
+    public void move() {
+        // 1. Atualizar Cooldown do Dash
+        if (dashCooldown > 0) {
+            dashCooldown -= delta; // Certifica-te que tens acesso ao delta aqui
         }
 
+        // 2. Verificar se carregou no Espaço para iniciar Dash
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && dashCooldown <= 0 && !isDashing) {
+            // Só faz dash se estivermos a andar nalguma direção
+            if (dashDirX != 0 || dashDirY != 0) {
+                startDash();
+            }
+        }
+
+        // 3. LÓGICA DE MOVIMENTO
+        if (isDashing) {
+            // --- MODO DASH (Ignora o teu som e teclas, move sozinho) ---
+            dashTimer -= delta;
+
+            // Move muito rápido na direção que estava guardada
+            this.getPosition().addX(dashDirX * DASH_SPEED * delta);
+            this.getPosition().addY(dashDirY * DASH_SPEED * delta);
+
+            // Se o tempo acabou, para o dash
+            if (dashTimer <= 0) {
+                isDashing = false;
+            }
+
+        } else {
+            // --- MODO NORMAL (O TEU CÓDIGO AQUI) ---
+
+            // Resetamos a direção do dash a 0. Assim, se parares de carregar nas teclas,
+            // o boneco sabe que está parado e não dá dash.
+            dashDirX = 0;
+            dashDirY = 0;
+
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+                this.getPosition().rmX(velocidade * delta);
+                mcwalk.setVolume(1f);
+                mcwalk.play();
+
+                dashDirX = -1; // <--- ADICIONADO: Guarda que estamos a ir para a Esquerda
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+                this.getPosition().addX(velocidade * delta);
+                mcwalk.setVolume(1f);
+                mcwalk.play();
+
+                dashDirX = 1;  // <--- ADICIONADO: Guarda que estamos a ir para a Direita
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+                this.getPosition().addY(velocidade * delta);
+                mcwalk.setVolume(1f);
+                mcwalk.play();
+
+                dashDirY = 1;  // <--- ADICIONADO: Guarda que estamos a ir para Cima
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+                this.getPosition().rmY(velocidade * delta);
+                mcwalk.setVolume(2f);
+                mcwalk.play();
+
+                dashDirY = -1; // <--- ADICIONADO: Guarda que estamos a ir para Baixo
+            }
+
+            // Pequena correção matemática para o dash não ser super rápido na diagonal:
+            if (dashDirX != 0 && dashDirY != 0) {
+                // Normaliza apenas a direção do dash (não mexemos na tua velocidade de andar normal)
+                float length = (float) Math.sqrt(dashDirX * dashDirX + dashDirY * dashDirY);
+                dashDirX /= length;
+                dashDirY /= length;
+            }
+        }
     }
 
     public float getatkDMc() {
@@ -115,6 +180,18 @@ public class Mc extends Character{
 
         // Ataque normal (sem crítico)
         return this.getatkD();
+    }
+
+    private void startDash() {
+        isDashing = true;
+        dashTimer = DASH_DURATION;
+        dashCooldown = DASH_COOLDOWN_TIME;
+        System.out.println("DASH!");
+    }
+
+    // Getter necessário para o gameinit saber se és invulnerável
+    public boolean isDashing() {
+        return isDashing;
     }
 
 
