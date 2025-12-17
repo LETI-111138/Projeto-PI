@@ -14,12 +14,10 @@ public class Main {
     public static void main (String[] arg) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 
-        // Configurações da Janela
         config.setForegroundFPS(60);
         config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
         config.setWindowIcon("assets/Static/gameicon.png");
 
-        // Iniciar o jogo
         new Lwjgl3Application(new gameinit(), config);
 
     }
