@@ -5,15 +5,14 @@ import java.util.Random;
 import java.util.List;
 public class Distribuicoes {
 
-    // Classe do java random ja que é mais versátil que o método math.random()
+    // Classe do java random já que é mais versátil que o método math.random()
     private static Random random = new Random();
 
     /**
-     * Gera um número aleatório segundo a Distribuição de Poisson.
-     * Algoritmo de Knuth (ideal para simulações simples).
-     * @param lambda A média de ocorrências esperada (ex: 5 inimigos).
-     * @return O número de eventos (inimigos) gerado.
      * V.A Discreta
+     * Gera um número aleatório segundo a Distribuição de Poisson.
+     * @param lambda A média de ocorrências esperada, 5 no caso da utilização para n.º de inimigos da sala.
+     * @return O número de inimigos gerados.
      */
     public static int gerarPoisson(double lambda) {
         double L = Math.exp(-lambda);
@@ -41,7 +40,7 @@ public class Distribuicoes {
     }
 
     // V.A. Discreta: Binomial
-    // Numero de itens aleatorios numa sala de tesouro (TREASURE ROOM)
+    // Numero de itens aleatórios numa sala de tesouro (TREASURE ROOM)
     public static int gerarBinomial(int n, float p) {
         int sucessos = 0;
         for (int i = 0; i < n; i++) {
@@ -54,7 +53,7 @@ public class Distribuicoes {
 
     /**
      * V.A. Contínua: Exponencial
-     * Movimentação Aleatoria Inimigos
+     * Tempo de Movimentação Aleatoria de Inimigos
      */
     public static float gerarExponencial(double lambda) {
         // Fórmula: X = -ln(1-U) / lambda
@@ -63,8 +62,7 @@ public class Distribuicoes {
 
     /**
      * V.A. Contínua: Normal (Box-Muller Transform)
-     * Valor aleatorio de dano
-     * Já que existe uma hipótese de Critical Hit será necessária uma certa aleatoriedade em relação ao cálculo de dano dos Objetos da Classe Character
+     * Valor aleatorio de dano critico
      */
     public static float gerarNormal(float media, float desvioPadrao) {
         // nextGaussian() usa a transformação de Box-Muller internamente
@@ -76,7 +74,7 @@ public class Distribuicoes {
      * V.A. Discreta: Uniforme (Permutação)
      * Implementação do algoritmo Fisher-Yates Shuffle.
      * Gera uma permutação aleatória onde todas as ordens têm probabilidade igual (1/n!).
-     * @param lista A lista de inteiros a baralhar (ex: IDs dos bosses).
+     * Reorganiza a ordem dos bosses do jogo
      */
     public static void gerarPermutacao(List<BossIndex> lista) {
         // Percorre a lista do fim para o início
